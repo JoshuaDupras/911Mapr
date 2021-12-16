@@ -1,33 +1,45 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8">
+<head>
+    <title>(title) MONROE COUNTY 911 INCIDENT MAP</title>
+
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <!-- LEAFLET -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css"
-      integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
-        crossorigin=""/>
+          integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
+          crossorigin=""/>
     <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"
-      integrity="sha512-QVftwZFqvtRNi0ZyCtsznlKSWOStnDORoefr1enyq5mVL4tmKB3S/EnC3rRJcxCPavG10IcrVGSmPh6Qw5lwrg=="
-      crossorigin=""></script>
-    <!-- END LEAFLET -->
-    <title>MONROE COUNTY 911 INCIDENT MAP</title>
-  </head>
-  <body>
-    <h1>MONROE COUNTY 911 INCIDENT MAP (heading?)</h1>
-
-    <script>
-        function play() {
-            var audio = new Audio(
-'https://media.geeksforgeeks.org/wp-content/uploads/20190531135120/beep.mp3');
-            audio.play();
-        }
-    </script>
-
-    <!-- LEAFLET -->
-    <div id="mapid" style = "width:900px; height:580px;"></div>
-    <script src="../static/leaf.js"></script>
+            integrity="sha512-QVftwZFqvtRNi0ZyCtsznlKSWOStnDORoefr1enyq5mVL4tmKB3S/EnC3rRJcxCPavG10IcrVGSmPh6Qw5lwrg=="
+            crossorigin=""></script>
     <!-- END LEAFLET -->
 
+    <!-- LOCATE.CONTROL -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol/dist/L.Control.Locate.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol/dist/L.Control.Locate.min.js" charset="utf-8"></script>
+    <!-- END LOCATE.CONTROL -->
 
-  </body>
+    <style>
+		html, body {
+			height: 100%;
+			margin: 0;
+		}
+		#map {
+			width: 600px;
+			height: 400px;
+		}
+	</style>
+
+    <style>body { padding: 0; margin: 0; } #map { height: 100%; width: 100vw; }</style>
+</head>
+    <body>
+        <h1>MONROE COUNTY 911 INCIDENT MAP (heading?)</h1>
+
+        <!-- LEAFLET -->
+        <div id="mapid" style = "width: 90%; height: 800px;"></div>
+        <script src="../static/leaf.js"></script>
+        <!-- END LEAFLET -->
+
+    </body>
 </html>

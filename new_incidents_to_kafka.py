@@ -24,7 +24,7 @@ table_name = 'incidents'
 db_user = os.getenv('db_user')
 db_pw = os.getenv('db_pass')
 
-new_incident_query_delay = 3
+new_incident_query_delay = 1
 
 def get_ts():
     return time.strftime("%Y%m%d_%H%M%S")
@@ -32,13 +32,9 @@ def get_ts():
 def get_new_incidents():
     print('getting new incidents')
     try:
-        uid = starting_row_uid
+        uid = None
 
         while True:
-            print(f'{get_ts()} - connecting and getting records from db with UID > {uid}')
-
-            records = []
-
             with con.connect(
                     host=host,
                     user=db_user,
@@ -49,6 +45,13 @@ def get_new_incidents():
 
                 tic = time.time()
                 with connection.cursor() as cursor:
+                    if not uid:
+                        last_row_query = f'select *from {table_name} ORDER BY uid DESC LIMIT 1;'
+                        cursor.execute(last_row_query)
+                        last_record = cursor.fetchone()
+                        uid = last_record[0]
+
+                    print(f"selecting entries with UID > {uid}")
                     select_query = f"SELECT * FROM {table_name} where uid > {uid}"
 
                     cursor.execute(select_query)

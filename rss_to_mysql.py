@@ -67,20 +67,20 @@ def rss_to_mysql():
             print(connection)
             entries = NewsFeed.entries
             print(f'{time.strftime("%Y%m%d_%H%M%S")}: found {len(entries)} incidents')
-            for incident_dir in entries:
+            for incident_dic in entries:
                 # print('\n\n******************************************')
-                # print(time.strftime("%Y%m%d_%H%M%S"))
+                print(f'    {time.strftime("%Y%m%d_%H%M%S")} - {incident_dic}')
 
-                # for k, v in incident_dir.items():
+                # for k, v in incident_dic.items():
                 # print(f'key={k}, value={v}')
 
-                title = incident_dir['title']
-                raw_published = incident_dir['published']
-                raw_published_parsed = incident_dir['published_parsed']
-                status = incident_dir['summary'].split(',')[0].split()[1]
-                inc_id = incident_dir['summary'].split(',')[1].split()[1]
-                geo_lat = incident_dir['geo_lat']
-                geo_lon = incident_dir['geo_long']
+                title = incident_dic['title']
+                raw_published = incident_dic['published']
+                raw_published_parsed = incident_dic['published_parsed']
+                status = incident_dic['summary'].split(',')[0].split()[1]
+                inc_id = incident_dic['summary'].split(',')[1].split()[1]
+                geo_lat = incident_dic['geo_lat']
+                geo_lon = incident_dic['geo_long']
 
                 inc_id_status = f'{inc_id}_{status}'
 

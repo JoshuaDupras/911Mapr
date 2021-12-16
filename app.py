@@ -2,6 +2,8 @@ import time
 
 from flask import Flask, render_template, Response
 from pykafka import KafkaClient
+from pykafka.common import OffsetType
+
 
 
 def get_kafka_client():
@@ -25,9 +27,8 @@ def get_messages(topicname):
     print('got kafka client, processing events now..')
 
     def events():
-        for i in client.topics[topicname].get_simple_consumer():
+        for i in client.topics[topicname].get_simple_consumer(auto_offset_reset=OffsetType.LATEST):
             yield 'data:{0}\n\n'.format(i.value.decode())
-            # time.sleep(0.1)  # rate limit
 
     print('returning response')
     return Response(events(), mimetype="text/event-stream")
