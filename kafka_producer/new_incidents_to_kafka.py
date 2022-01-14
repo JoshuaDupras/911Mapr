@@ -1,42 +1,43 @@
 import json
-import os
 import time
-
-import winsound
 
 import mysql.connector as con
 from pykafka import KafkaClient
 
-from dotenv import load_dotenv
-load_dotenv()
-
 # KAFKA PRODUCER
-client = KafkaClient(hosts="localhost:9092")
-topic = client.topics['live_incidents_2h_test']
-producer = topic.get_sync_producer()
+kafka_hostname = 'kafka_broker'
+kafka_port = 29092
+kafka_topic = 'live_incidents_2h_test'
 
 starting_row_uid = 0
 
-host = "localhost"
-db_name = "911_incidents"
-table_name = 'incidents'
+db_host = "db"
+db_name = "incidents"
+db_table_name = 'incidents'
 
-db_user = os.getenv('db_user')
-db_pw = os.getenv('db_pass')
+with open('/run/secrets/mysql_db_user', 'r') as user_f:
+    db_user = user_f.read()
+print(f'db_user={db_user}')
 
-new_incident_query_delay = 1
+with open('/run/secrets/mysql_db_password', 'r') as pw_f:
+    db_pw = pw_f.read()
+print(f'db_pw={db_pw}')
+
+new_incident_query_delay_secs = 1
+
 
 def get_ts():
     return time.strftime("%Y%m%d_%H%M%S")
 
+
 def get_new_incidents():
-    print('getting new incidents')
+    print('getting new incidents from db')
     try:
         uid = None
 
         while True:
             with con.connect(
-                    host=host,
+                    host=db_host,
                     user=db_user,
                     password=db_pw,
                     database=db_name,
@@ -46,42 +47,44 @@ def get_new_incidents():
                 tic = time.time()
                 with connection.cursor() as cursor:
                     if not uid:
-                        last_row_query = f'select *from {table_name} ORDER BY uid DESC LIMIT 1;'
+                        last_row_query = f'select *from {db_table_name} ORDER BY uid DESC LIMIT 1;'
                         cursor.execute(last_row_query)
                         last_record = cursor.fetchone()
                         uid = last_record[0]
 
-                    print(f"selecting entries with UID > {uid}")
-                    select_query = f"SELECT * FROM {table_name} where uid > {uid}"
+                    print(f"\tselecting entries with UID > {uid}...", end='')
+                    select_query = f"SELECT * FROM {db_table_name} where uid > {uid}"
 
                     cursor.execute(select_query)
                     records = cursor.fetchall()
                     if records:
-                        print(f"{get_ts()} - found {len(records)} new rows with UID > {uid}")
+                        print(f" {get_ts()} - found {len(records)} new rows with UID > {uid}")
 
                         latest_uid = records[-1][0]
                         uid = latest_uid
+                    else:
+                        print(' no new records')
 
                 toc = time.time()
-                print(f"SELECT query completed in {toc-tic} seconds")
+                print(f"\tSELECT query completed in {toc - tic} seconds")
 
             if records:
                 send_records_to_kafka(records)
 
-            print('connection closed.. sleeping\n')
-            time.sleep(new_incident_query_delay)
+            print(f'connection closed - sleeping {new_incident_query_delay_secs} second(s)...\n')
+            time.sleep(new_incident_query_delay_secs)
 
     except con.Error as e:
         print(e)
 
 
 def send_records_to_kafka(records):
-    print(f'{get_ts()} - sending {len(records)} records to kafka')
-    for raw_record in records:
-        winsound.Beep(440, 500)
+    client = KafkaClient(hosts=f"{kafka_hostname}:{kafka_port}")
+    topic = client.topics[kafka_topic]
+    producer = topic.get_sync_producer()
 
-        lat = raw_record[-2]
-        lon = raw_record[-1]
+    print(f'{get_ts()} - trying to send {len(records)} records to kafka')
+    for raw_record in records:
 
         uid, ts, title, published_ts, id_status, id, status, lat, lon = raw_record
 
@@ -93,5 +96,7 @@ def send_records_to_kafka(records):
         producer.produce(message.encode('ascii'))
     print(f'{get_ts()} - kafka records sent')
 
+
 if __name__ == '__main__':
+    print('starting kafka producer')
     get_new_incidents()

@@ -1,0 +1,114 @@
+version: "3.9"
+
+services:
+  db:
+    image: mysql:latest
+    ports:
+      - "32000:3306"
+    networks:
+      - db_net
+    volumes:
+      - db_data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql_root_password
+      MYSQL_DATABASE: incidents
+      MYSQL_USER: incidents
+      MYSQL_PASSWORD_FILE: /run/secrets/mysql_db_password
+      TZ: US/Eastern
+    command: [ 'mysqld', '--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci','--default-time-zone=-05:00' ]
+    restart: always
+    secrets:
+      - mysql_root_password
+      - mysql_db_user
+      - mysql_db_password
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:6.2.0
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - kafka_net
+
+  kafka_broker:
+    image: confluentinc/cp-kafka:6.2.0
+    ports:
+    # To learn about configuring Kafka for access across networks see
+    # https://www.confluent.io/blog/kafka-client-cannot-connect-to-broker-on-aws-on-docker-etc/
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka_broker:29092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+    networks:
+      - kafka_net
+
+  rss_scraper:
+    depends_on:
+      - db
+    networks:
+      - db_net
+    build:
+      context: ./
+      dockerfile: ./rss_scraper/Dockerfile
+    restart:
+      always
+    secrets:
+      - mysql_db_user
+      - mysql_db_password
+
+  kafka_producer:
+    depends_on:
+      - db
+      - kafka_broker
+    build:
+      context: ./
+      dockerfile: ./kafka_producer/Dockerfile
+    restart:
+      always
+    secrets:
+      - mysql_db_user
+      - mysql_db_password
+    networks:
+      - db_net
+      - kafka_net
+
+  web_app:
+    depends_on:
+      - db
+      - rss_scraper
+      - zookeeper
+      - kafka_broker
+      - kafka_producer
+    build:
+      context: ./
+      dockerfile: ./web_app/Dockerfile
+    ports:
+      - "5000:5000"
+    networks:
+      - kafka_net
+    restart:
+      always
+
+secrets:
+  mysql_root_password:
+    file: secrets/mysql_root_password.txt
+  mysql_db_user:
+    file: secrets/mysql_db_user.txt
+  mysql_db_password:
+    file: secrets/mysql_db_password.txt
+
+volumes:
+  db_data: {}
+
+networks:
+  db_net:
+    driver: bridge
+  kafka_net:
+    driver: bridge

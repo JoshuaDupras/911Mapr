@@ -5,9 +5,8 @@ from pykafka import KafkaClient
 from pykafka.common import OffsetType
 
 
-
 def get_kafka_client():
-    return KafkaClient(hosts='localhost:9092')
+    return KafkaClient(hosts='911incidents_kafka_broker_1:29092')
 
 
 app = Flask(__name__)
@@ -35,4 +34,5 @@ def get_messages(topicname):
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5001)
+    print('starting flask app')
+    app.run(debug=True, host='0.0.0.0')

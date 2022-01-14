@@ -3,15 +3,14 @@ import time
 import feedparser
 import mysql.connector as con
 
-from dotenv import load_dotenv
-load_dotenv()
-
-host = "localhost"
-db_name = "911_incidents"
+db_host = "db"
+db_name = "incidents"
 table_name = 'incidents'
 
 delay_sec = 10
 
+def get_ts():
+    return time.strftime("%Y%m%d_%H%M%S")
 
 def send_incident_to_mysql(conn, record):
     # print(f"inserting record:{record}")
@@ -37,16 +36,16 @@ def get_published_ts(raw_published, raw_published_parsed):
     # print(f"raw_published={raw_published}")
     # print(f'raw_published_parsed={raw_published_parsed}')
 
-    HH_MM_SS = raw_published.split()[4]
-    YYYY = str(raw_published_parsed[0])
-    MM = str(raw_published_parsed[1])
-    if len(MM) == 1:
-        MM = '0' + MM
-    DD = str(raw_published_parsed[2])
-    if len(DD) == 1:
-        DD = '0' + DD
+    hh_mm_ss = raw_published.split()[4]
+    yyyy = str(raw_published_parsed[0])
+    mm = str(raw_published_parsed[1])
+    if len(mm) == 1:
+        mm = '0' + mm
+    dd = str(raw_published_parsed[2])
+    if len(dd) == 1:
+        dd = '0' + dd
 
-    ts = f'{YYYY}-{MM}-{DD} {HH_MM_SS}'
+    ts = f'{yyyy}-{mm}-{dd} {hh_mm_ss}'
     ts_len = len(ts)
     if ts_len != 19:
         raise ValueError(f"Invalid mysql TIMESTAMP generated, length is not = 19 (len = {ts_len}")
@@ -55,17 +54,20 @@ def get_published_ts(raw_published, raw_published_parsed):
 
 
 def rss_to_mysql():
+    print(f'{get_ts()}: connecting to RSS feed and scraping incidents')
+
     try:
-        NewsFeed = feedparser.parse("https://www.monroecounty.gov/911/rss.php")
+        news_feed = feedparser.parse("https://www.monroecounty.gov/911/rss.php")
 
         with con.connect(
-                host=host,
-                user=os.getenv('db_user'),
-                password=os.getenv('db_pass'),
+                host=db_host,
+                port=3306,
+                user=open('/run/secrets/mysql_db_user').read(),
+                password=open('/run/secrets/mysql_db_password').read(),
                 database=db_name,
         ) as connection:
             print(connection)
-            entries = NewsFeed.entries
+            entries = news_feed.entries
             print(f'{time.strftime("%Y%m%d_%H%M%S")}: found {len(entries)} incidents')
             for incident_dic in entries:
                 # print('\n\n******************************************')
@@ -90,12 +92,12 @@ def rss_to_mysql():
 
                 send_incident_to_mysql(connection, record)
 
-
     except con.Error as e:
         print(e)
 
 
 def main():
+    print('rss_scraper main()')
     while True:
         rss_to_mysql()
 
@@ -103,4 +105,5 @@ def main():
 
 
 if __name__ == '__main__':
+    print(f'{get_ts()}: starting rss_to_mysql.py')
     main()
