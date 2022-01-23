@@ -15,13 +15,12 @@ db_host = "db"
 db_name = "incidents"
 db_table_name = 'incidents'
 
-with open('/run/secrets/mysql_db_user', 'r') as user_f:
-    db_user = user_f.read()
+db_user = 'incidents'
 print(f'db_user={db_user}')
 
-with open('/run/secrets/mysql_db_password', 'r') as pw_f:
+with open('/run/secrets/db_user_pass', 'r') as pw_f:
     db_pw = pw_f.read()
-print(f'db_pw={db_pw}')
+# print(f'db_pw={db_pw}')
 
 new_incident_query_delay_secs = 1
 
@@ -90,9 +89,9 @@ def send_records_to_kafka(records):
 
         record_strings = [uid, str(ts), title, str(published_ts), id_status, id, status, str(lat), str(lon)]
 
-        jsonString = json.dumps(record_strings)
+        json_string = json.dumps(record_strings)
 
-        message = str(jsonString)
+        message = str(json_string)
         producer.produce(message.encode('ascii'))
     print(f'{get_ts()} - kafka records sent')
 

@@ -9,8 +9,17 @@ table_name = 'incidents'
 
 delay_sec = 10
 
+db_user = 'incidents'
+print(f'db_user={db_user}')
+
+with open('/run/secrets/db_user_pass', 'r') as pw_f:
+    db_pw = pw_f.read()
+# print(f'db_pw={db_pw}')
+
+
 def get_ts():
     return time.strftime("%Y%m%d_%H%M%S")
+
 
 def send_incident_to_mysql(conn, record):
     # print(f"inserting record:{record}")
@@ -62,8 +71,8 @@ def rss_to_mysql():
         with con.connect(
                 host=db_host,
                 port=3306,
-                user=open('/run/secrets/mysql_db_user').read(),
-                password=open('/run/secrets/mysql_db_password').read(),
+                user=db_user,
+                password=db_pw,
                 database=db_name,
         ) as connection:
             print(connection)

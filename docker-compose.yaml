@@ -10,17 +10,16 @@ services:
     volumes:
       - db_data:/var/lib/mysql
     environment:
-      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql_root_password
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db_root_pass
       MYSQL_DATABASE: incidents
       MYSQL_USER: incidents
-      MYSQL_PASSWORD_FILE: /run/secrets/mysql_db_password
+      MYSQL_PASSWORD_FILE: /run/secrets/db_user_pass
       TZ: US/Eastern
     command: [ 'mysqld', '--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci','--default-time-zone=-05:00' ]
     restart: always
     secrets:
-      - mysql_root_password
-      - mysql_db_user
-      - mysql_db_password
+      - db_root_pass
+      - db_user_pass
 
   zookeeper:
     image: confluentinc/cp-zookeeper:6.2.0
@@ -60,8 +59,7 @@ services:
     restart:
       always
     secrets:
-      - mysql_db_user
-      - mysql_db_password
+      - db_user_pass
 
   kafka_producer:
     depends_on:
@@ -72,12 +70,11 @@ services:
       dockerfile: ./kafka_producer/Dockerfile
     restart:
       always
-    secrets:
-      - mysql_db_user
-      - mysql_db_password
     networks:
       - db_net
       - kafka_net
+    secrets:
+      - db_user_pass
 
   web_app:
     depends_on:
@@ -96,14 +93,6 @@ services:
     restart:
       always
 
-secrets:
-  mysql_root_password:
-    file: secrets/mysql_root_password.txt
-  mysql_db_user:
-    file: secrets/mysql_db_user.txt
-  mysql_db_password:
-    file: secrets/mysql_db_password.txt
-
 volumes:
   db_data: {}
 
@@ -112,3 +101,9 @@ networks:
     driver: bridge
   kafka_net:
     driver: bridge
+
+secrets:
+  db_root_pass:
+    name: "arn:aws:secretsmanager:us-east-2:901235749806:secret:prod/incident_map/root_pw-uSo8tP"
+  db_user_pass:
+    name: "arn:aws:secretsmanager:us-east-2:901235749806:secret:prod/incident_map/db_pass-JCtRWH"
