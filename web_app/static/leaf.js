@@ -21,7 +21,7 @@ map.fitBounds([
 
 mapMarkers = [];
 
-var source = new EventSource('/topic/live_incidents_2h_test'); //ENTER YOUR TOPICNAME HERE
+var source = new EventSource('/topic/live_incidents'); //ENTER YOUR TOPICNAME HERE
 source.addEventListener('message', function(e){
 
   obj = e

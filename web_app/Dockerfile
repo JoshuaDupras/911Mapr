@@ -1,9 +1,7 @@
 # syntax=docker/dockerfile:1
 FROM python:3.10
 
-WORKDIR /web_app
-
-COPY ./web_app .
+COPY . .
 
 RUN pip install -r requirements.txt
 

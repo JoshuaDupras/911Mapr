@@ -6,7 +6,7 @@ from pykafka.common import OffsetType
 
 
 def get_kafka_client():
-    return KafkaClient(hosts='911incidents_kafka_broker_1:29092')
+    return KafkaClient(hosts='kafka_broker:29092')
 
 
 app = Flask(__name__)

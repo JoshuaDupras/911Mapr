@@ -1,4 +1,5 @@
 import json
+import os
 import time
 
 import mysql.connector as con
@@ -7,19 +8,20 @@ from pykafka import KafkaClient
 # KAFKA PRODUCER
 kafka_hostname = 'kafka_broker'
 kafka_port = 29092
-kafka_topic = 'live_incidents_2h_test'
+kafka_topic = 'live_incidents'
 
 starting_row_uid = 0
 
-db_host = "db"
-db_name = "incidents"
-db_table_name = 'incidents'
+db_host = os.getenv('MYSQL_HOST')
+db_name = os.getenv('MYSQL_DATABASE')
+db_table_name = os.getenv('MYSQL_TABLE')
 
-db_user = 'incidents'
+db_user = os.getenv('MYSQL_USER')
 print(f'db_user={db_user}')
 
-with open('/run/secrets/db_user_pass', 'r') as pw_f:
-    db_pw = pw_f.read()
+db_pw = os.getenv('MYSQL_PASSWORD')
+if db_pw is None:
+    raise ValueError('Password Environment Variable not found!')
 # print(f'db_pw={db_pw}')
 
 new_incident_query_delay_secs = 1

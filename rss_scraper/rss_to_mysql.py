@@ -3,17 +3,18 @@ import time
 import feedparser
 import mysql.connector as con
 
-db_host = "db"
-db_name = "incidents"
-table_name = 'incidents'
-
 delay_sec = 10
 
-db_user = 'incidents'
+db_host = os.getenv('MYSQL_HOST')
+db_name = os.getenv('MYSQL_DATABASE')
+db_table_name = os.getenv('MYSQL_TABLE')
+
+db_user = os.getenv('MYSQL_USER')
 print(f'db_user={db_user}')
 
-with open('/run/secrets/db_user_pass', 'r') as pw_f:
-    db_pw = pw_f.read()
+db_pw = os.getenv('MYSQL_PASSWORD')
+if db_pw is None:
+    raise ValueError('Password Environment Variable not found!')
 # print(f'db_pw={db_pw}')
 
 
@@ -25,13 +26,13 @@ def send_incident_to_mysql(conn, record):
     # print(f"inserting record:{record}")
 
     insert_product_query = f"""
-        INSERT IGNORE INTO {table_name}
+        INSERT IGNORE INTO {db_table_name}
             (title, published, inc_id_status, inc_id, status, geo_lat, geo_lon)
             VALUES ( %s, %s, %s, %s, %s, %s, %s )
         """
 
     update_timestamp_query = f"""
-                ALTER TABLE {table_name} AUTO_INCREMENT=1;
+                ALTER TABLE {db_table_name} AUTO_INCREMENT=1;
             """
 
     with conn.cursor() as cursor:
