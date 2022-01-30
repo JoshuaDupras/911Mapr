@@ -1,6 +1,6 @@
 FROM mysql:latest
 
-#COPY my_custom.cnf /etc/mysql/my.cnf  # shelve this in case mysql optimization is needed
+COPY my_custom.cnf /etc/mysql/my.cnf
 
 COPY init-db.sql /docker-entrypoint-initdb.d/
 
