@@ -23,7 +23,7 @@ def get_messages(topicname):
     print(f'getting messages with topicname={topicname}')
     client = get_kafka_client()
 
-    print('got kafka client, processing events now..')
+    print('got Kafka client, processing events now..')
 
     def events():
         for i in client.topics[topicname].get_simple_consumer(auto_offset_reset=OffsetType.LATEST):

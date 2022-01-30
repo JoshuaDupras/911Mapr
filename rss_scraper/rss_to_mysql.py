@@ -78,10 +78,10 @@ def rss_to_mysql():
         ) as connection:
             print(connection)
             entries = news_feed.entries
-            print(f'{time.strftime("%Y%m%d_%H%M%S")}: found {len(entries)} incidents')
+            print(f'{time.strftime("%Y%m%d_%H%M%S")}: found {len(entries)} incidents - attempting to send to db..')
             for incident_dic in entries:
                 # print('\n\n******************************************')
-                print(f'    {time.strftime("%Y%m%d_%H%M%S")} - {incident_dic}')
+                # print(f'    {time.strftime("%Y%m%d_%H%M%S")} - {incident_dic}')
 
                 # for k, v in incident_dic.items():
                 # print(f'key={k}, value={v}')
