@@ -86,18 +86,15 @@ map.setMaxBounds(map.getBounds());
 // zoom the map to the polyline
 //map.fitBounds(getBounds(), { reset: true });
 
-//var district_boundary = new L.geoJson();
-//district_boundary.addTo(map);
-//
-//$.ajax({
-//dataType: "json",
-//url: "data/monroe_county.geojson",
-//success: function(data) {
-//    $(data.features).each(function(key, data) {
-//        district_boundary.addData(data);
-//    });
-//}
-//}).error(function() {});
+var county_border_style = {
+    "color": "#ff0000",
+    "weight": 3,
+    "opacity": 0.6,
+    "fill": false,
+    "dashArray": "10"
+};
 
-var geojsonLayer = new L.GeoJSON.AJAX("/static/monroe_county.json");
+var geojsonLayer = new L.GeoJSON.AJAX("/static/monroe_county.json", {
+    style: county_border_style
+});
 geojsonLayer.addTo(map);
