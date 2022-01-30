@@ -21,7 +21,7 @@ map.fitBounds([
 
 mapMarkers = [];
 
-var source = new EventSource('/topic/live_incidents'); //ENTER YOUR TOPICNAME HERE
+var source = new EventSource('/topic/live_incidents'); // KAFKA TOPIC NAME
 source.addEventListener('message', function(e){
 
   obj = e
@@ -72,3 +72,32 @@ var lc = L.control.locate({
         title: "Show me where I am, yo!"
     }
 }).addTo(map);
+
+// coordinates limiting the map
+function getBounds() {
+  const southWest = new L.LatLng(42.930000, -78.000000);
+  const northEast = new L.LatLng(43.377000, -77.370000);
+  return new L.LatLngBounds(southWest, northEast);
+}
+
+// set maxBounds
+map.setMaxBounds(map.getBounds());
+
+// zoom the map to the polyline
+//map.fitBounds(getBounds(), { reset: true });
+
+//var district_boundary = new L.geoJson();
+//district_boundary.addTo(map);
+//
+//$.ajax({
+//dataType: "json",
+//url: "data/monroe_county.geojson",
+//success: function(data) {
+//    $(data.features).each(function(key, data) {
+//        district_boundary.addData(data);
+//    });
+//}
+//}).error(function() {});
+
+var geojsonLayer = new L.GeoJSON.AJAX("/static/monroe_county.json");
+geojsonLayer.addTo(map);

@@ -34,5 +34,6 @@ def get_messages(topicname):
 
 
 if __name__ == '__main__':
+    # TODO: switch to production webserver
     print('starting flask app')
     app.run(debug=True, host='0.0.0.0')
