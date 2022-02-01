@@ -1,5 +1,3 @@
-import time
-
 from flask import Flask, render_template, Response
 from pykafka import KafkaClient
 from pykafka.common import OffsetType

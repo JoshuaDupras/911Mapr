@@ -32,8 +32,8 @@ services:
     image: confluentinc/cp-kafka:6.2.0
     container_name: kafka_broker
     ports:
-    # To learn about configuring Kafka for access across networks see
-    # https://www.confluent.io/blog/kafka-client-cannot-connect-to-broker-on-aws-on-docker-etc/
+      # To learn about configuring Kafka for access across networks see
+      # https://www.confluent.io/blog/kafka-client-cannot-connect-to-broker-on-aws-on-docker-etc/
       - "9092:9092"
     depends_on:
       - zookeeper
@@ -123,7 +123,7 @@ services:
       always
 
 volumes:
-  db_data: {}
+  db_data: { }
 
 networks:
   db_net:

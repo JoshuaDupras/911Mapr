@@ -12,7 +12,7 @@ jobs:
 
       - name: Generate Deployment Zip Package
         run: zip -r deploy.zip * -x '*.git*'
-        
+
       - name: Get timestamp
         uses: gerred/actions/current-time@master
         id: current-time

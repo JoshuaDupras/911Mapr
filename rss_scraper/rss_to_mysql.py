@@ -1,5 +1,6 @@
 import os
 import time
+
 import feedparser
 import mysql.connector as con
 
@@ -15,6 +16,8 @@ print(f'db_user={db_user}')
 db_pw = os.getenv('MYSQL_PASSWORD')
 if db_pw is None:
     raise ValueError('Password Environment Variable not found!')
+
+
 # print(f'db_pw={db_pw}')
 
 
