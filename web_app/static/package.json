@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "@ansur/leaflet-pulse-icon": "^0.1.1",
+    "leaflet": "^1.7.1",
     "leaflet.locatecontrol": "^0.76.0"
   }
 }
