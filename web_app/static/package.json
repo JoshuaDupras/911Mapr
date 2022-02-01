@@ -1,0 +1,15 @@
+{
+  "name": "incident_map",
+  "version": "0.1.0",
+  "description": "911 incident map",
+  "main": "leaf.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@ansur/leaflet-pulse-icon": "^0.1.1",
+    "leaflet.locatecontrol": "^0.76.0"
+  }
+}
