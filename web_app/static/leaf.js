@@ -21,54 +21,115 @@ L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_toke
 
 mapMarkers = [];
 
-var source = new EventSource('/topic/live_incidents'); // KAFKA TOPIC NAME
-source.addEventListener('message', function (e) {
+// var source_init = new EventSource('/incidents/get_last/${get_last}'); // KAFKA TOPIC NAME
+// var source_live = new EventSource('/topic/live_incidents/live'); // KAFKA TOPIC NAME
 
-    obj = e
+window.onload = (event) => {
+    console.log('page is fully loaded');
+    // fetch_last(10);
+    fetch('/test')
+        .then(function (response) {
+            return response.json();
+        }).then(text => {
+        console.log('GET response:');
+        console.log(text.greeting);
+    });
 
-    console.log('Message');
-    obj = JSON.parse(e.data);
-    console.log(obj);
+    var index = 33;
+    fetch(`/getdata/${index}`)
+        .then(response => response.text())
+        .then(text => {
+            console.log('GET response text:');
+            console.log(text);
+        });
 
-    console.log(obj.length);
+    var num_incidents = 25;
+    fetch(`/incidents/getlast/${num_incidents}`)
+        .then(response => response.json())
+        .then(data => {
+            console.log('GET response text:');
+            console.log(data);
+            for (const message of data) {
+                make_marker('{' + String(message) + '}')  // bit ugly, but we need the correct json string format
+            }
+        });
+};
 
-    title = obj[2];
+// function incident_listener_live() {
+//     console.log('starting live events consumer');
+//     source_live.addEventListener('message', function (e) {
+//         console.log('got live event message')
+//         get_incident_message(e)
+//     }, false);
+// }
+
+function make_marker(msg_json) {
+    //Needs to be in this form:
+    // const json = '{"data":["stuff", "more_stuff", ..etc] }';
+
+    console.log('Making marker from json message:');
+    console.log(msg_json);
+
+    console.log('Making marker from message data:');
+    let msg_json_parsed = JSON.parse(msg_json);
+    console.log(msg_json_parsed)
+
+    console.log('msg_json_parsed.data:')
+    let msg = msg_json_parsed.data
+    console.log(msg)
+
+    console.log('length:');
+    console.log(msg.length);
+
+    console.log('db timestamp:');
+    let timestamp = msg[1];
+    console.log(timestamp)
+
+    console.log('title:');
+    let title = msg[2];
     console.log(title);
 
-    published_time = obj[3];
+    console.log('published time:')
+    let published_time = msg[3];
     console.log(published_time);
 
-    status = obj[6];
-    console.log(status);
+    console.log('id_status:')
+    let id_status = msg[4];
+    console.log(id_status);
 
-    lat = obj[obj.length - 2];
+    console.log('id:')
+    let id = msg[5];
+    console.log(id);
+
+    console.log('status:')
+    let status_label = msg[6];
+    console.log(status_label);
+
+    console.log('lat:')
+    let lat = msg[msg.length - 2];
     console.log(lat);
 
-    lon = obj[obj.length - 1];
+    console.log('lon:')
+    let lon = msg[msg.length - 1];
     console.log(lon);
 
-    var pulsingIcon = L.icon.pulse({iconSize: [20, 20], color: 'blue'});
+    var pulsingIcon = L.icon.pulse({iconSize: [10, 10], color: 'blue'});
     var marker = L.marker([lat, lon], {icon: pulsingIcon}).addTo(map);
-
     // marker = L.circleMarker([lat, lon], {
     //   color: '#3388ff'
     // }).addTo(map);
-
     marker_str = 'Title: ' + title + '<br>Time: ' + published_time + '<br>Status: ' + status;
     console.log(marker_str);
-    marker.bindPopup(marker_str).openPopup();
+    marker.bindPopup(marker_str);
+    // marker.openPopup();
     mapMarkers.unshift(marker);
-
     if (mapMarkers.length > num_markers) {
         map.removeLayer(mapMarkers[(num_markers - 1)]);
         mapMarkers.pop();
     }
-
     console.log(mapMarkers.length);
-
-    console.log('end');
-
-}, false);
+    console.log('end message');
+}
 
 var lc = L.control.locate({
     position: 'topleft',
