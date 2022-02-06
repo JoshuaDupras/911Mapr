@@ -4,7 +4,7 @@ var mapMarkers = [];
 var audioElement = new Audio();
 audioElement.src = "data:audio/ogg;base64,T2dnUwACAAAAAAAAAAA+...";
 
-var map = L.map('mapid', {
+var map = L.map('map', {
     preferCanvas: true
 }).setView([43.1566, -77.6089], 11);
 

@@ -1,14 +1,58 @@
-html, body {
+html, body, #container {
     height: 100%;
     width: 100%;
+    overflow: hidden;
 }
 
-#container {
-    height: 100%;
+body {
+    padding-top: 63px;
 }
 
-#mapid {
+/* CSS by ID */
+#map {
+    position: relative;
     width: auto;
     height: 100%;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+#navbarDropdown {
+    font-weight: bold;
+    color: white;
+
+}
+
+/* CSS by CLASS */
+.navbar .navbar-brand {
+    font-weight: bold;
+    font-size: 25px;
+    /*color: #ff6900;*/
+    /*background-color: blueviolet;*/
+}
+
+.navbar-brand {
+    /*background-color: #ff6900;*/
+}
+
+.container-fluid {
+    /*background-color: blueviolet;*/
+    margin-left: 2.0rem;
+    margin-right: 2.0rem;
+}
+
+.navbar-collapse.in {
+    overflow-y: hidden;
+}
+
+.navbar-header .navbar-icon-container {
+    margin-right: 15px;
+}
+
+.navbar-header .navbar-icon {
+    line-height: 50px;
+    height: 50px;
+}
+
+.navbar-header a.navbar-icon {
+    margin-left: 25px;
 }
