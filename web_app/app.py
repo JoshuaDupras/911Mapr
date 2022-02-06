@@ -55,6 +55,8 @@ def data_get(index_no):
 # Consumer API
 @app.route('/incidents/getlast/<num_messages>', methods=['GET'])  # topic name comes from leaf.js
 def get_last(num_messages):
+    # TODO: input checking on num_messages, int, limit range
+
     app.logger.info(f'{request.remote_addr}:getting last {num_messages} messages"')
     client = get_kafka_client()
 
@@ -90,19 +92,24 @@ def get_last(num_messages):
 
 
 # Consumer API
+disable_live_stream = False
 @app.route('/incidents/live')  # topic name comes from leaf.js
 def get_messages(topicname='live_incidents'):
-    print(f'getting messages with topic name={topicname}')
+    if disable_live_stream:
+        app.logger.warning('live event stream disabled by flask backend')
+        return 0
+
+    app.logger.info(f'getting messages with topic name={topicname}')
     client = get_kafka_client()
 
-    print('got Kafka client, processing events now..')
+    app.logger.info('got Kafka client, processing events now..')
 
     def events():
         for i in client.topics[topicname].get_simple_consumer(auto_offset_reset=OffsetType.LATEST,
                                                               reset_offset_on_start=True):
             yield 'data:{0}\n\n'.format(i.value.decode())
 
-    print('returning response')
+    app.logger.info('returning response')
     return Response(events(), mimetype="text/event-stream")
 
 

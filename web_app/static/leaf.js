@@ -1,4 +1,4 @@
-const num_markers = 250;
+const max_num_markers = 250;
 var mapMarkers = [];
 
 var audioElement = new Audio();
@@ -44,8 +44,8 @@ fetch(`/getdata/${index}`)
         console.log(text);
     });
 
-const num_incidents = 25;
-fetch(`/incidents/getlast/${num_incidents}`)
+const num_startup_incidents = 100;
+fetch(`/incidents/getlast/${num_startup_incidents}`)
     .then(response => response.json())
     .then(response => {
         console.log('getlast response text:');
@@ -66,7 +66,7 @@ fetch(`/incidents/getlast/${num_incidents}`)
             let json_message_data = message_json_parsed.data;
             console.log(json_message_data);
 
-            make_marker(json_message_data);
+            update_markers(json_message_data);
         }
     });
 
@@ -85,90 +85,177 @@ setTimeout(() => {
         let message_json_parsed = JSON.parse(e.data);
         console.log(message_json_parsed);
 
-        make_marker(message_json_parsed);
+        update_markers(message_json_parsed);
     }, false);
 }, 3000);
 
-function make_marker(json_record) {
-    // event message needs to be in this form:
-    // msg_json = '{"data":["stuff", "more_stuff", ..etc] }';
+function update_markers(json_record) {
+    console.log('got record, updating markers');
+    let new_inc = new_incident_from_json(json_record);
 
-    console.log('Making marker');
+    // check if id is in markers yet
+    console.log('num mapMarkers=');
+    console.log(mapMarkers.length);
+
+    console.log('mapMarkers=');
+    console.log(mapMarkers);
+
+    for (const i in mapMarkers) {
+        existing_marker = mapMarkers[i];
+
+        // console.log('existing marker=');
+        // console.log(existing_marker);
+
+        // console.log('checking if marker IDs are equal (old:' + existing_marker.id + ', new:' + new_inc.id);
+
+        if (existing_marker.id === new_inc.id) {
+            // incident ID already exists, update this marker
+            // console.log('\tmarkers equal');
+            update_marker(i, new_inc);
+            return 1;
+        }
+    }
+
+    console.log('incident not found in mapMarkers, adding now..');
+    add_new_incident_to_map(new_inc);
+}
+
+function add_new_incident_to_map(new_inc) {
+
+    // new incident ID, make new marker
+    let new_incident_marker = {
+        id: new_inc.id,
+        title: new_inc.title,
+        published_ts: new_inc.published_timestamp,
+        lat: new_inc.lat,
+        lon: new_inc.lon,
+        status: []
+    };
+
+    let status_obj = {
+        db_index: new_inc.db_index,
+        db_ts: new_inc.db_timestamp,
+        type: new_inc.status
+    };
+    new_incident_marker.status.push(status_obj);
+
+    console.log('generated new_incident_marker:');
+    console.log(new_incident_marker);
+
+    // add marker, popup, etc
+    new_incident_marker = add_marker_to_incident(new_incident_marker);
+    console.log('added marker to incident. updated incident=');
+    console.log(new_incident_marker);
+
+    new_incident_marker.marker.openPopup();
+    let num_markers = mapMarkers.unshift(new_incident_marker);
+
+    console.log('added incident with marker to list. total markers=');
+    console.log(num_markers);
+
+    if (num_markers > max_num_markers) {
+        map.removeLayer(mapMarkers[(max_num_markers - 1)]);
+        mapMarkers.pop();
+    }
+
+    // audioElement.play();  # TODO: enable audio alerts, need toggle button on map as well
+
+    console.log('marker add complete. total markers = ' + mapMarkers.length);
+
+    console.log('marker added -> mapMarkers=');
+    console.log(mapMarkers);
+}
+
+function add_marker_to_incident(inc) {
+    // TODO: marker color based on latest status type
+
+    console.log('adding marker to incident. inc=');
+    console.log(inc);
+
+    var pulsingIcon = L.icon.pulse({iconSize: [10, 10], color: 'blue'});
+    var marker = L.marker([inc.lat, inc.lon], {icon: pulsingIcon}).addTo(map);
+
+    // non-pulsing marker
+    // marker = L.circleMarker([lat, lon], {
+    //   color: '#3388ff'
+    // }).addTo(map);
+
+    let marker_str = pretty_str_recurse_objects(inc, ['marker']);
+
+    console.log('adding marker with string:');
+    console.log(marker_str);
+    marker.bindPopup(marker_str);
+
+    inc.marker = marker;
+
+    return inc;
+}
+
+function update_marker(existing_marker_index, new_inc) {
+    console.log('updating marker with index=' + existing_marker_index);
+
+    let status_obj = {
+        db_index: new_inc.db_index,
+        db_ts: new_inc.db_timestamp,
+        type: new_inc.status
+    };
+    mapMarkers[existing_marker_index].status.push(status_obj);
+
+    console.log('marker with updated status=');
+    console.log(mapMarkers[existing_marker_index]);
+
+    console.log('updating marker with string:');
+    let marker_str = pretty_str_recurse_objects(mapMarkers[existing_marker_index], ['marker']);
+    console.log(marker_str);
+    mapMarkers[existing_marker_index].marker.setPopupContent(marker_str);
+}
+
+function new_incident_from_json(json_record) {
+    // do all fixups here: string, capitalize, etc
+    console.log('generating incident from json record');
 
     console.log('json_record:');
     console.log(json_record);
 
-    // console.log('record_json_parsed:');
-    // let record_json_parsed = JSON.parse(raw_record);
-    // console.log(record_json_parsed);
+    const incident = {
+        db_index: json_record[0],
+        db_timestamp: json_record[1],
+        title: json_record[2],
+        published_timestamp: json_record[3],
+        id: String(json_record[5]).toUpperCase(),
+        status: String(json_record[6]).toUpperCase(),
+        lat: json_record[7],
+        lon: json_record[8]
+    };
 
-    // console.log('msg_json_parsed.data:');
-    // let record = record_json_parsed.data;
-    // console.log(record);
+    console.log('returning incident:');
+    console.log(incident);
+    return incident;
+}
 
-    // console.log('length:');
-    // console.log(msg.length);
-
-    // console.log('db index:');
-    let db_timestamp = json_record[0];
-    // console.log(db_timestamp);
-
-    // console.log('db timestamp:');
-    let timestamp = json_record[1];
-    // console.log(timestamp);
-
-    // console.log('title:');
-    let title = json_record[2];
-    // console.log(title);
-
-    // console.log('published time:');
-    let published_time = json_record[3];
-    // console.log(published_time);
-
-    // console.log('id_status:');
-    let id_status = json_record[4];
-    // console.log(id_status);
-
-    // console.log('id:');
-    let id = json_record[5];
-    // console.log(id);
-
-    // console.log('status:');
-    let status_label = json_record[6];
-    // console.log(status_label);
-
-    // console.log('lat:');
-    let lat = json_record[json_record.length - 2];
-    // console.log(lat);
-
-    // console.log('lon:');
-    let lon = json_record[json_record.length - 1];
-    // console.log(lon);
-
-    var pulsingIcon = L.icon.pulse({iconSize: [10, 10], color: 'blue'});
-    var marker = L.marker([lat, lon], {icon: pulsingIcon}).addTo(map);
-    // marker = L.circleMarker([lat, lon], {
-    //   color: '#3388ff'
-    // }).addTo(map);
-    marker_str = 'Title: ' + title + '<br>Time: ' + published_time + '<br>Status: ' + status;
-
-    console.log('adding marking with string:');
-    console.log(marker_str);
-    marker.bindPopup(marker_str);
-    marker.openPopup();
-    mapMarkers.unshift(marker);
-    if (mapMarkers.length > num_markers) {
-        map.removeLayer(mapMarkers[(num_markers - 1)]);
-        mapMarkers.pop();
+function pretty_str_recurse_objects(obj, stop_recurse_keys = [], tab_spacer = '') {
+    let str = '';
+    for (const [key, val] of Object.entries(obj)) {
+        // console.log(`${tab_spacer}recursive_str_generator: key=${key}, value=${val}`);
+        if (val instanceof Object) {
+            if (stop_recurse_keys.includes(key)) {
+                // console.log(`${tab_spacer}recursive_str_generator: stopping recursion on key=${key}`);
+                str += `${tab_spacer}${key}::${val}\n`;
+            } else {
+                // console.log(`${tab_spacer}recursive_str_generator: object found -> recursing...`);
+                str += `${tab_spacer}${key}\n`;
+                str += pretty_str_recurse_objects(val, stop_recurse_keys, (tab_spacer + '\t'));
+            }
+        } else {
+            // console.log(`${tab_spacer}recursive_str_generator: not obj -> printing key, value`);
+            str += `${tab_spacer}${key}::${val}\n`;
+        }
     }
-
-    audioElement.play();
-
-    console.log('marker add complete. total markers = ' + mapMarkers.length);
+    return str;
 }
 
 var lc = L.control.locate({
-    position: 'topleft',
+    position: 'topright',
     strings: {
         title: "Show me where I am, yo!"
     }
@@ -195,7 +282,7 @@ var county_border_style = {
     "dashArray": "10"
 };
 
-var geojsonLayer = new L.GeoJSON.AJAX("/static/monroe_county.json", {
+var county_border_geojson_layer = new L.GeoJSON.AJAX("/static/monroe_county.json", {
     style: county_border_style
 });
-geojsonLayer.addTo(map);
+county_border_geojson_layer.addTo(map);
