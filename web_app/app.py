@@ -2,11 +2,11 @@ import logging
 import math
 from itertools import islice
 
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, Response
 from pykafka import KafkaClient
 from pykafka.common import OffsetType
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG, format='{asctime} | {levelname:^8} | {message}', style='{')
 
 
 def get_kafka_client():
@@ -18,12 +18,13 @@ app = Flask(__name__)
 
 @app.route('/')
 def index():
-    app.logger.info('index.html called')
+    app.logger.info(f'{request.remote_addr}:index.html called')
     return render_template('index.html')
 
 
 @app.route('/test', methods=['GET', 'POST'])
 def testfn():
+    app.logger.info(f'{request.remote_addr}: /test')
     # GET request
     if request.method == 'GET':
         message = {'greeting': 'Hello from Flask!'}
@@ -42,7 +43,7 @@ app.logger.info(data)
 ######## Data fetch ############
 @app.route('/getdata/<index_no>', methods=['GET', 'POST'])
 def data_get(index_no):
-    app.logger.info(f'data_get({index_no})')
+    app.logger.info(f'{request.remote_addr}:data_get({index_no})')
     if request.method == 'POST':  # POST request
         app.logger.info(request.get_text())  # parse as text
         return 'OK', 200
@@ -54,14 +55,14 @@ def data_get(index_no):
 # Consumer API
 @app.route('/incidents/getlast/<num_messages>', methods=['GET'])  # topic name comes from leaf.js
 def get_last(num_messages):
-    app.logger.info(f'getting last {num_messages} messages"')
+    app.logger.info(f'{request.remote_addr}:getting last {num_messages} messages"')
     client = get_kafka_client()
 
-    app.logger.info('Kafka client connected')
+    app.logger.info(f'{request.remote_addr}:Kafka client connected')
 
     def consume_last(n):
         num_msgs = int(n)
-        app.logger.info(f'creating consumer and retrieving last {num_msgs} messages')
+        app.logger.info(f'{request.remote_addr}:creating consumer and retrieving last {num_msgs} messages')
 
         # TODO: pretty sure consumer hangs if no messages found
         consumer = client.topics['live_incidents'].get_simple_consumer(auto_offset_reset=OffsetType.LATEST,
@@ -74,50 +75,48 @@ def get_last(num_messages):
         # if we want to rewind before the beginning of the partition, limit to beginning
         offsets = [(p, (o if o > -1 else -2)) for p, o in offsets]
         # reset the consumer's offsets
-        app.logger.info(f'offsets={offsets}')
+        app.logger.info(f'{request.remote_addr}:offsets={offsets}')
         consumer.reset_offsets(offsets)
 
         message_list = []
         for message in islice(consumer, num_msgs):
-            app.logger.info(f'init messages: offset={message.offset}, value={message.value}')
+            app.logger.info(f'{request.remote_addr}:init messages: offset={message.offset}, value={message.value}')
             # message_list.append(message.value.decode())
             message_list.append('"data":{0}'.format(message.value.decode()))
         return jsonify(message_list)
 
-    app.logger.info('returning response')
+    app.logger.info(f'{request.remote_addr}:returning response')
     return consume_last(num_messages)
-    #     app.logger.debug(f'message_list={message_list}')
-    #     return jsonify(message_list)
-    #
-    # app.logger.info('returning response')
-    # response = consume_last(num_messages)
-    # return response
 
 
-# @app.route('/topic/<topicname>/live')  # topic name comes from leaf.js
-# def get_live_messages(topicname):
-#     app.logger.info(f'getting live messages with topic name: "{topicname}"')
-#     client = get_kafka_client()
-#
-#     app.logger.info('got Kafka client, processing events now..')
-#
-#     def events():
-#         for message in client.topics[topicname].get_simple_consumer(auto_offset_reset=OffsetType.LATEST):
-#             app.logger.info(f'live messages: offset={message.offset}, value={message.value}')
-#             yield 'data:{0}\n\n'.format(message.value.decode())
-#
-#     app.logger.info('returning response')
-#     return Response(events(), mimetype="text/event-stream")
+# Consumer API
+@app.route('/incidents/live')  # topic name comes from leaf.js
+def get_messages(topicname='live_incidents'):
+    print(f'getting messages with topic name={topicname}')
+    client = get_kafka_client()
+
+    print('got Kafka client, processing events now..')
+
+    def events():
+        for i in client.topics[topicname].get_simple_consumer(auto_offset_reset=OffsetType.LATEST,
+                                                              reset_offset_on_start=True):
+            yield 'data:{0}\n\n'.format(i.value.decode())
+
+    print('returning response')
+    return Response(events(), mimetype="text/event-stream")
+
 
 @app.route('/printtest')
 def printMsg():
-    app.logger.warning('testing warning log')
-    app.logger.error('testing error log')
-    app.logger.info('testing info log')
-    return "Check your console"
+    app.logger.error(f'{request.remote_addr}:testing error log')
+    app.logger.warning(f'{request.remote_addr}:testing warning log')
+    app.logger.error(f'{request.remote_addr}:testing error log')
+    app.logger.info(f'{request.remote_addr}:testing info log')
+    return "printtest complete -> Check backend log"
 
 
 if __name__ == '__main__':
     # TODO: switch to production webserver
     app.logger.info('starting flask app')
-    app.run(debug=True, host='0.0.0.0')
+    app.debug = True
+    app.run(threaded=True, host='0.0.0.0')
