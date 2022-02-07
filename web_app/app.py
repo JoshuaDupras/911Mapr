@@ -68,7 +68,8 @@ def get_last(num_messages):
 
         # TODO: pretty sure consumer hangs if no messages found
         consumer = client.topics['live_incidents'].get_simple_consumer(auto_offset_reset=OffsetType.LATEST,
-                                                                       reset_offset_on_start=True)
+                                                                       reset_offset_on_start=True,
+                                                                       consumer_timeout_ms=1000)
         # how many messages should we get from the end of each partition?
         max_partition_rewind = int(math.ceil(num_msgs / len(consumer._partitions)))
         # find the beginning of the range we care about for each partition

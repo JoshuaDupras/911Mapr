@@ -44,7 +44,7 @@ fetch(`/getdata/${index}`)
         console.log(text);
     });
 
-const num_startup_incidents = 3;  // TODO: increase this again
+const num_startup_incidents = 50;  // TODO: increase this again
 fetch(`/incidents/getlast/${num_startup_incidents}`)
     .then(response => response.json())
     .then(response => {
