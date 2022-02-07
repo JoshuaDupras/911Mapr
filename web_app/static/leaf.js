@@ -137,7 +137,7 @@ function add_new_incident_to_map(new_inc) {
         db_ts: new_inc.db_timestamp,
         type: new_inc.status
     };
-    new_incident_marker.status.push(status_obj);
+    new_incident_marker.status.unshift(status_obj);
 
     console.log('generated new_incident_marker:');
     console.log(new_incident_marker);
@@ -199,7 +199,7 @@ function update_marker(existing_marker_index, new_inc) {
         db_ts: new_inc.db_timestamp,
         type: new_inc.status
     };
-    mapMarkers[existing_marker_index].status.push(status_obj);
+    mapMarkers[existing_marker_index].status.unshift(status_obj);
 
     console.log('marker with updated status=');
     console.log(mapMarkers[existing_marker_index]);

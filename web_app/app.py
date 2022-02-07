@@ -6,7 +6,7 @@ from flask import Flask, render_template, request, jsonify, Response
 from pykafka import KafkaClient
 from pykafka.common import OffsetType
 
-logging.basicConfig(level=logging.DEBUG, format='{asctime} | {levelname:^8} | {message}', style='{')
+logging.basicConfig(level=logging.DEBUG, format='{asctime} | {levelname:^8} | {name}.{lineno} : {message}', style='{')
 
 
 def get_kafka_client():
