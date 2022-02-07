@@ -37,7 +37,7 @@ def testfn():
 
 ######## Example data, in sets of 3 ############
 data = list(range(1, 300, 3))
-app.logger.info(data)
+# app.logger.info(data)
 
 
 ######## Data fetch ############
