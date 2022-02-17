@@ -5,23 +5,19 @@ var audioElement = new Audio();
 audioElement.src = "data:audio/ogg;base64,T2dnUwACAAAAAAAAAAA+...";
 
 var map = L.map('map', {
-    preferCanvas: true
-}).setView([43.1566, -77.6089], 11);
+    preferCanvas: true,
+    minZoom: 9,
+    maxZoom: 18
+});
+map.setView([43.1575, -77.6808], 10);
 
 L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
     attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-//    maxZoom: 18,
-//    minZoom: 11,
     tileSize: 512,
     zoomOffset: -1,
     id: 'mapbox/dark-v10',
     accessToken: 'pk.eyJ1Ijoiam9zaHVhZHVwcmFzIiwiYSI6ImNreDR5enZ2ejI2NWsydnEzMHpiMGQzaTkifQ.1H9rEa9GIAO5ly-aBXkY9g' //ENTER YOUR ACCESS TOKEN HERE
 }).addTo(map);
-
-//map.fitBounds([
-//    [43.4, -78.00],
-//    [42.9, -77.00]
-//]);
 
 window.onload = (event) => {
     console.log('page is fully loaded');
@@ -263,16 +259,16 @@ var lc = L.control.locate({
 
 // coordinates limiting the map
 function getBounds() {
-    const southWest = new L.LatLng(42.70, -78.44);
-    const northEast = new L.LatLng(43.50, -77.10);
+    const southWest = new L.LatLng(42.80, -78.10);
+    const northEast = new L.LatLng(43.50, -77.30);
     return new L.LatLngBounds(southWest, northEast);
 }
 
 // set maxBounds
-map.setMaxBounds(map.getBounds());
+map.setMaxBounds(getBounds());
 
 // zoom the map to the polyline
-map.fitBounds(getBounds(), {reset: true});
+// map.fitBounds(getBounds(), {reset: true});
 
 var county_border_style = {
     "color": "#ff0000",
