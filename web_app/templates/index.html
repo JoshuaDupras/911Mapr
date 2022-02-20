@@ -47,68 +47,119 @@
 
     </head>
     <body>
-
-        <!-- Navbar start -->
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
-            <div class="container-fluid">
-                <a class="navbar-brand"
-                   href="#">911Mapr.com
-                </a>
-                <button aria-controls="navbarSupportedContent"
-                        aria-expanded="false"
-                        aria-label="Toggle navigation"
-                        class="navbar-toggler"
-                        data-bs-target="#navbarSupportedContent"
-                        data-bs-toggle="collapse"
-                        type="button">
-                    <span class="navbar-toggler-icon"></span>
-                    <span></span>
-                    <span></span>
-                </button>
-                <div class="collapse navbar-collapse"
-                     id="navbarSupportedContent">
-                    <ul class="navbar-nav mb-2 mb-lg-0 ms-auto">
-                        <!--                        <li class="nav-item">-->
-                        <!--                            <a aria-current="page"-->
-                        <!--                               class="nav-link active fw-bold"-->
-                        <!--                               href="#">Home-->
-                        <!--                            </a>-->
-                        <!--                        </li>-->
-                        <li class="nav-item dropdown">
-                            <a aria-expanded="false"
-                               class="nav-link dropdown-toggle"
-                               data-bs-toggle="dropdown"
-                               href="#"
-                               id="navbarDropdown"
-                               role="button">
-                                Locations
-                            </a>
-                            <ul aria-labelledby="navbarDropdown"
-                                class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
-                                <li>
-                                    <a class="dropdown-item"
-                                       href="#">Monroe County, NY (Rochester)
-                                    </a>
-                                </li>
-                                <!--                                <li>-->
-                                <!--                                    <hr class="dropdown-divider">-->
-                                <!--                                </li>-->
-                                <!--                                <li><a class="dropdown-item text-dark" href="#"></a></li>-->
-                            </ul>
-                        </li>
-                        <li class="nav-item">
-                            <a aria-current="page"
-                               class="nav-link active fw-bold"
-                               data-bs-target="#exampleModal"
-                               data-bs-toggle="modal"
-                               href="#">About
-                            </a>
-                        </li>
-                    </ul>
-                </div>
+        <nav class="container-fluid navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+            <!--            <div class="container-fluid">-->
+            <a class="navbar-brand"
+               href="#">911Mapr.com
+            </a>
+            <button aria-controls="navbarSupportedContent"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation"
+                    class="navbar-toggler"
+                    data-bs-target="#navbarSupportedContent"
+                    data-bs-toggle="collapse"
+                    type="button">
+                <span class="navbar-toggler-icon"></span>
+                <span></span>
+                <span></span>
+            </button>
+            <div class="collapse navbar-collapse"
+                 id="navbarSupportedContent">
+                <ul class="navbar-nav mb-2 mb-lg-0 ms-auto">
+                    <!--                        <li class="nav-item">-->
+                    <!--                            <a aria-current="page"-->
+                    <!--                               class="nav-link active fw-bold"-->
+                    <!--                               href="#">Home-->
+                    <!--                            </a>-->
+                    <!--                        </li>-->
+                    <li class="nav-item dropdown">
+                        <a aria-expanded="false"
+                           class="nav-link dropdown-toggle"
+                           data-bs-toggle="dropdown"
+                           href="#"
+                           id="navbarDropdown"
+                           role="button">
+                            Locations
+                        </a>
+                        <ul aria-labelledby="navbarDropdown"
+                            class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item"
+                                   href="#">Monroe County, NY (Rochester)
+                                </a>
+                            </li>
+                            <!--                                <li>-->
+                            <!--                                    <hr class="dropdown-divider">-->
+                            <!--                                </li>-->
+                            <!--                                <li><a class="dropdown-item text-dark" href="#"></a></li>-->
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a aria-current="page"
+                           class="nav-link active fw-bold"
+                           data-bs-target="#exampleModal"
+                           data-bs-toggle="modal"
+                           href="#">About
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="border rounded-3 p-1 text-decoration-none"
+                           data-bs-target="#sidebar"
+                           data-bs-toggle="collapse"
+                           href="#"><i class="bi bi-list bi-lg py-2 p-1"></i>
+                            Menu
+                        </a>
+                    </li>
+                </ul>
             </div>
         </nav>
-        <!-- Navbar End -->
+
+        <!-- MAIN CONTENT -->
+        <div class="container-fluid main-content">
+            <div class="row clearfix">
+                <div class="col-auto p-0 pull-left" id="sidebar-col">
+                    <div class="sidebar collapse collapse-horizontal show border-end"
+                         id="sidebar">
+                        <a class="d-flex align-items-center flex-shrink-0 p-3 link-dark text-decoration-none border-bottom"
+                           href="#">
+                            <svg class="bi me-2"
+                                 height="24"
+                                 width="30">
+                                <use xlink:href="#"></use>
+                            </svg>
+                            <span class="fs-5 fw-semibold">Incident List</span>
+                        </a>
+                        <div class="list-group border-0 rounded-0 text-sm-start min-vh-100"
+                             id="sidebar-nav">
+                            <a class="list-group-item border-end-0 d-inline-block text-truncate"
+                               data-bs-parent="#sidebar"
+                               href="#"><i class="bi bi-bootstrap"></i> <span>item 1</span></a>
+                            <a class="list-group-item border-end-0 d-inline-block text-truncate"
+                               data-bs-parent="#sidebar"
+                               href="#"><i class="bi bi-bootstrap"></i> <span>item 2</span></a>
+                            <a class="list-group-item border-end-0 d-inline-block text-truncate"
+                               data-bs-parent="#sidebar"
+                               href="#"><i class="bi bi-bootstrap"></i> <span>item 3</span></a>
+                            <a class="list-group-item border-end-0 d-inline-block text-truncate"
+                               data-bs-parent="#sidebar"
+                               href="#"><i class="bi bi-bootstrap"></i> <span>item 4</span></a>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="col p-0 pull-right" id="map-col">
+                    <div id="map-container">
+                        <!-- LEAFLET -->
+                        <div class="leaflet-container leaflet-fade-anim leaflet-grab leaflet-touch-drag"
+                             id="map"></div>
+                        <script src="../static/leaf.js"></script>
+                        <!-- END LEAFLET -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
 
         <!-- Modal start -->
         <div aria-hidden="true"
@@ -144,15 +195,8 @@
         <script crossorigin="anonymous"
                 integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
                 src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+        <!-- END BOOTSTRAP -->
 
-        <!-- LEAFLET -->
-        <div id="container">
-            <div class="leaflet-container leaflet-fade-anim leaflet-grab leaflet-touch-drag"
-                 id="map"></div>
-        </div>
-
-        <script src="../static/leaf.js"></script>
-        <!-- END LEAFLET -->
 
     </body>
 </html>

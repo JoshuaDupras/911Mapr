@@ -1,4 +1,11 @@
-html, body, #container {
+
+:root {
+    --navbar-height: 63px;
+    --first-color: #4723D9;
+    --z-fixed: 100
+}
+
+html, body, #map-container {
     height: 100%;
     width: 100%;
     overflow: hidden;
@@ -8,10 +15,17 @@ body {
     padding-top: 63px;
 }
 
-/* CSS by ID */
-#map {
+/*CSS by ID*/
+#map-container {
     position: relative;
     width: auto;
+    height: 100%;
+}
+
+#map {
+    position: relative;
+    width: 100%;
+    /*height: calc(100% - 126px);*/
     height: 100%;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
 }
@@ -23,21 +37,10 @@ body {
 }
 
 /* CSS by CLASS */
-.navbar .navbar-brand {
-    font-weight: bold;
-    font-size: 25px;
-    /*color: #ff6900;*/
-    /*background-color: blueviolet;*/
-}
-
-.navbar-brand {
-    /*background-color: #ff6900;*/
-}
-
-.container-fluid {
-    /*background-color: blueviolet;*/
-    margin-left: 2.0rem;
-    margin-right: 2.0rem;
+.navbar {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    /*border: 3px solid #4723D9;*/
 }
 
 .navbar-collapse.in {
@@ -49,10 +52,98 @@ body {
 }
 
 .navbar-header .navbar-icon {
-    line-height: 50px;
-    height: 50px;
+    line-height: var(--navbar-height);
+    height: var(--navbar-height);
 }
 
 .navbar-header a.navbar-icon {
     margin-left: 25px;
 }
+
+.navbar .navbar-brand {
+    font-weight: bold;
+    font-size: 25px;
+    /*border: 3px solid #7521ad;*/
+}
+
+/*.offcanvas-start {*/
+/*    position: relative;*/
+/*}*/
+
+.sidebar {
+    /*position: absolute;*/
+    /*border: 3px solid #8f21ad;*/
+    /*top: 0;*/
+    /*left: -30%;*/
+    /*width: var(--sidebar-width);*/
+    /*height: 100vh;*/
+    /*background-color: var(--first-color);*/
+    /*padding: .5rem 1rem 0 0;*/
+    /*transition: .5s;*/
+    /*z-index: var(--z-fixed)*/
+}
+
+.main-content {
+    position: relative;
+    /*top: var(--navbar-height);*/
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    /*border: 3px solid #ff6700;*/
+}
+
+.map-container {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    /*border: 3px solid #73ff00;*/
+
+
+}
+
+.leaflet-container {
+    /*position: relative;*/
+    width: 100%;
+    height: 100%;
+    /*border: 3px solid #ffcc00;*/
+}
+
+.row {
+    height: 100%;
+}
+
+#sidebar-nav {
+    width: 200px;
+}
+
+
+/*.flex-cont {*/
+/*    display: flex;*/
+/*    flex-direction: row;*/
+/*    flex-wrap: wrap;*/
+
+/*}*/
+
+/*#sidebar-col {*/
+/*    order: 1;*/
+/*}*/
+
+/*#map-col {*/
+/*    order: 2;*/
+/*}*/
+
+
+/*@media (max-width: 650px) {*/
+/*    .main-content {*/
+/*        !*display: block;*!*/
+/*        flex-direction: column;*/
+/*    }*/
+
+/*    #sidebar-col {*/
+/*        order: 2;*/
+/*    }*/
+
+/*    #map-col {*/
+/*        order: 1;*/
+/*    }*/
+/*}*/
