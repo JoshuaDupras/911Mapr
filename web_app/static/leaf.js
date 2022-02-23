@@ -160,6 +160,9 @@ function add_new_incident_to_map(new_inc) {
 
     console.log('marker added -> mapMarkers=');
     console.log(mapMarkers);
+    
+    console.log('adding incident to incident table')
+    incTable_addRow(new_inc.published_timestamp, new_inc.title, new_inc.id)
 }
 
 function add_marker_to_incident(inc) {
@@ -271,7 +274,7 @@ map.setMaxBounds(getBounds());
 // map.fitBounds(getBounds(), {reset: true});
 
 var county_border_style = {
-    "color": "#ff0000",
+    "color": "rgba(255,0,30,0.36)",
     "weight": 3,
     "opacity": 0.6,
     "fill": false,
@@ -282,3 +285,47 @@ var county_border_geojson_layer = new L.GeoJSON.AJAX("/static/monroe_county.json
     style: county_border_style
 });
 county_border_geojson_layer.addTo(map);
+
+function toggle_sidebar() {
+    var sb_c = document.getElementById("sidebarTest");
+    var map_c = document.getElementById("mapTest");
+    if (sb_c.style.display === "none") {
+        sb_c.style.display = "block";
+        if (document.body.clientWidth < 575) {
+            map_c.style.height = "auto";
+        }
+    } else {
+        sb_c.style.display = "none";
+        if (document.body.clientWidth < 575) {
+            map_c.style.height = "100%";
+        }
+    }
+}
+
+
+// document.getElementById('sidebarContents').innerHTML = '<ol><li>html data</li></ol>';
+
+function incTable_addRow(published, title, id) {
+    // Get a reference to the table
+    let tableID = 'inc_tbody';
+    let tableRef = document.getElementById(tableID);
+
+    // Insert a row at the end of the table
+    let newRow = tableRef.insertRow(0);
+
+    // Insert a cell in the row at index 0
+    let published_cell = newRow.insertCell(0);
+    let published_text = document.createTextNode(published);
+    published_cell.appendChild(published_text);
+
+    let title_cell = newRow.insertCell(1);
+    let title_text = document.createTextNode(title);
+    title_cell.appendChild(title_text);
+
+    let id_cell = newRow.insertCell(2);
+    let id_text = document.createTextNode(id);
+    id_cell.appendChild(id_text);
+}
+
+// Call addRow() with the table's ID
+// addRow('inc_tbody');

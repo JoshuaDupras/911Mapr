@@ -103,99 +103,105 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="border rounded-3 p-1 text-decoration-none"
-                           data-bs-target="#sidebar"
-                           data-bs-toggle="collapse"
-                           href="#"><i class="bi bi-list bi-lg py-2 p-1"></i>
-                            Menu
-                        </a>
+                        <button onclick="toggle_sidebar()">sidebar js toggle</button>
+                    </li>
+                    <li class="nav-item">
+
+                        <button aria-controls="sidebarTest"
+                                aria-expanded="false"
+                                class="btn btn-primary"
+                                data-bs-target="#sidebarTest"
+                                data-bs-toggle="collapse"
+                                type="button">
+                            bootstrap sidebar toggle
+                        </button>
                     </li>
                 </ul>
             </div>
         </nav>
 
-        <!-- MAIN CONTENT -->
-        <div class="container-fluid main-content">
-            <div class="row clearfix">
-                <div class="col-auto p-0 pull-left" id="sidebar-col">
-                    <div class="sidebar collapse collapse-horizontal show border-end"
-                         id="sidebar">
-                        <a class="d-flex align-items-center flex-shrink-0 p-3 link-dark text-decoration-none border-bottom"
-                           href="#">
-                            <svg class="bi me-2"
-                                 height="24"
-                                 width="30">
-                                <use xlink:href="#"></use>
-                            </svg>
-                            <span class="fs-5 fw-semibold">Incident List</span>
-                        </a>
-                        <div class="list-group border-0 rounded-0 text-sm-start min-vh-100"
-                             id="sidebar-nav">
-                            <a class="list-group-item border-end-0 d-inline-block text-truncate"
-                               data-bs-parent="#sidebar"
-                               href="#"><i class="bi bi-bootstrap"></i> <span>item 1</span></a>
-                            <a class="list-group-item border-end-0 d-inline-block text-truncate"
-                               data-bs-parent="#sidebar"
-                               href="#"><i class="bi bi-bootstrap"></i> <span>item 2</span></a>
-                            <a class="list-group-item border-end-0 d-inline-block text-truncate"
-                               data-bs-parent="#sidebar"
-                               href="#"><i class="bi bi-bootstrap"></i> <span>item 3</span></a>
-                            <a class="list-group-item border-end-0 d-inline-block text-truncate"
-                               data-bs-parent="#sidebar"
-                               href="#"><i class="bi bi-bootstrap"></i> <span>item 4</span></a>
+        <div class="row h-100">
+            <div class="col h-auto order-sm-last"
+                 id="mapTest"
+                 style="background-color: orange; border: solid #4723D9">
+                <div class="leaflet-container leaflet-fade-anim leaflet-grab leaflet-touch-drag"
+                     id="map"></div>
+            </div>
+            <div class="col-sm-4 collapse show bg-dark"
+                 id="sidebarTest">
+                <div class="sidebar-wrapper">
+                    <div class="card"
+                         id="pnlSidebar">
+                        <div class="card-header">
+                            <h5 class="card-title"><span id="sidebarTitle">Incident List</span>
+                                <button class="btn btn-xs btn-default pull-right"
+                                        id="sidebar-hide-btn"
+                                        type="button">
+                                    <i class="fa fa-chevron-left"></i>
+                                </button>
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-xs-12 col-md-12"
+                                     id="sidebarContents">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th scope="col">published</th>
+                                                <th scope="col">Title</th>
+                                                <th scope="col">id</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="inc_tbody">
+                                            <!-- table elements will be dynamically added-->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-
-                <div class="col p-0 pull-right" id="map-col">
-                    <div id="map-container">
-                        <!-- LEAFLET -->
-                        <div class="leaflet-container leaflet-fade-anim leaflet-grab leaflet-touch-drag"
-                             id="map"></div>
-                        <script src="../static/leaf.js"></script>
-                        <!-- END LEAFLET -->
-                    </div>
-                </div>
-
             </div>
-        </div>
 
-        <!-- Modal start -->
-        <div aria-hidden="true"
-             aria-labelledby="exampleModalLabel"
-             class="modal fade"
-             id="exampleModal"
-             tabindex="-1">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Welcome to 911Mapr.com</h5>
-                        <button aria-label="Close"
-                                class="btn-close"
-                                data-bs-dismiss="modal"
-                                type="button"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p>911Mapr.com is a live map of 911 calls</p>
-                        <p>Created by Joshua Dupras</p>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn btn-secondary"
-                                data-bs-dismiss="modal"
-                                type="button">Close
-                        </button>
+            <!-- Modal start -->
+            <div aria-hidden="true"
+                 aria-labelledby="exampleModalLabel"
+                 class="modal fade"
+                 id="exampleModal"
+                 tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Welcome to 911Mapr.com</h5>
+                            <button aria-label="Close"
+                                    class="btn-close"
+                                    data-bs-dismiss="modal"
+                                    type="button"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>911Mapr.com is a live map of 911 calls</p>
+                            <p>Created by Joshua Dupras</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-secondary"
+                                    data-bs-dismiss="modal"
+                                    type="button">Close
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-        <!-- Modal End -->
+            <!-- Modal End -->
 
-        <!-- Bootsrap Bundle with Popper -->
-        <script crossorigin="anonymous"
-                integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
-                src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-        <!-- END BOOTSTRAP -->
+            <!-- Bootsrap Bundle with Popper -->
+            <script crossorigin="anonymous"
+                    integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
+                    src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+            <!-- END BOOTSTRAP -->
+
+            <script src="../static/leaf.js"></script>
 
 
     </body>
