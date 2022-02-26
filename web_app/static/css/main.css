@@ -1,58 +1,77 @@
-html, body, #container {
-    height: 100%;
-    width: 100%;
-    overflow: hidden;
-}
-
 body {
-    padding-top: 63px;
+    padding: 0;
+    margin: 0;
 }
 
-/* CSS by ID */
-#map {
-    position: relative;
-    width: auto;
+html, body, #map {
     height: 100%;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    font: 10pt "Helvetica Neue", Arial, Helvetica, sans-serif;
 }
 
-#navbarDropdown {
-    font-weight: bold;
-    color: white;
-
+.about_head {
+    font-style: normal;
+    color: #ff6900;
 }
 
-/* CSS by CLASS */
-.navbar .navbar-brand {
-    font-weight: bold;
-    font-size: 25px;
-    /*color: #ff6900;*/
-    /*background-color: blueviolet;*/
+.about_body {
+    font-style: italic;
+    color: #AAA;
 }
 
-.navbar-brand {
-    /*background-color: #ff6900;*/
+.warning {
+    font-style: oblique;
+    color: yellow;
 }
 
-.container-fluid {
-    /*background-color: blueviolet;*/
-    margin-left: 2.0rem;
-    margin-right: 2.0rem;
+.sidebar {
+    background-color: rgba(0, 0, 0, 0.27);
 }
 
-.navbar-collapse.in {
-    overflow-y: hidden;
+.sidebar-content {
+    background-color: rgba(0, 0, 0, 0.27);
 }
 
-.navbar-header .navbar-icon-container {
-    margin-right: 15px;
+.sidebar-tabs {
+    background-color: #898989;
 }
 
-.navbar-header .navbar-icon {
-    line-height: 50px;
-    height: 50px;
+.active {
+    /*background-color: rgba(0, 0, 0, 0.27);*/
 }
 
-.navbar-header a.navbar-icon {
-    margin-left: 25px;
+.sidebar-pane {
 }
+
+.sidebar-header {
+    color: #000000;
+    background-color: rgb(136, 136, 136);
+}
+
+.sidebar-tabs > li:hover, .sidebar-tabs > ul > li:hover {
+    color: #ff6900;
+    background-color: #000000;
+}
+
+.sidebar-tabs > li.active, .sidebar-tabs > ul > li.active {
+    color: #000000;
+    background-color: #ff6700;
+}
+
+.list-group-item-action {
+    color: black;
+    background-color: #ff6900;
+    border: solid 6pt black;
+}
+
+.list-group-item-action:hover {
+    background-color: rgba(255, 101, 0, 0.81);
+}
+
+
+
+
+
+
+
+
+/* TOOLTIPS */

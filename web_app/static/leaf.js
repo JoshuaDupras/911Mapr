@@ -10,6 +10,7 @@ var map = L.map('map', {
     maxZoom: 18
 });
 map.setView([43.1575, -77.6808], 10);
+map.zoomControl.setPosition('bottomright');
 
 L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
     attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
@@ -113,7 +114,7 @@ function update_markers(json_record) {
     }
 
     console.log('incident not found in mapMarkers, adding now..');
-    add_new_incident_to_map(new_inc);
+    add_new_incident_to_map(new_inc);  // adds incident to mapMarkers
 }
 
 function add_new_incident_to_map(new_inc) {
@@ -133,7 +134,7 @@ function add_new_incident_to_map(new_inc) {
         db_ts: new_inc.db_timestamp,
         type: new_inc.status
     };
-    new_incident_marker.status.unshift(status_obj);
+    new_incident_marker.status.unshift(status_obj);  // add status to incident
 
     console.log('generated new_incident_marker:');
     console.log(new_incident_marker);
@@ -143,10 +144,16 @@ function add_new_incident_to_map(new_inc) {
     console.log('added marker to incident. updated incident=');
     console.log(new_incident_marker);
 
-    new_incident_marker.marker.openPopup();
-    let num_markers = mapMarkers.unshift(new_incident_marker);
+    // new_incident_marker.marker.openPopup();
+    let num_markers = mapMarkers.push(new_incident_marker);
+    let index = mapMarkers.length - 1;
 
-    console.log('added incident with marker to list. total markers=');
+    console.log('added incident with marker to list.');
+
+    console.log('new incident index=');
+    console.log(index);
+
+    console.log('total markers=');
     console.log(num_markers);
 
     if (num_markers > max_num_markers) {
@@ -160,6 +167,9 @@ function add_new_incident_to_map(new_inc) {
 
     console.log('marker added -> mapMarkers=');
     console.log(mapMarkers);
+
+    console.log('adding incident to incident table');
+    add_incident_to_list(index);
 }
 
 function add_marker_to_incident(inc) {
@@ -251,7 +261,7 @@ function pretty_str_recurse_objects(obj, stop_recurse_keys = [], tab_spacer = ''
 }
 
 var lc = L.control.locate({
-    position: 'topright',
+    position: 'bottomright',
     strings: {
         title: "Show me where I am, yo!"
     }
@@ -271,7 +281,7 @@ map.setMaxBounds(getBounds());
 // map.fitBounds(getBounds(), {reset: true});
 
 var county_border_style = {
-    "color": "#ff0000",
+    "color": "rgba(255,0,30,0.36)",
     "weight": 3,
     "opacity": 0.6,
     "fill": false,
@@ -282,3 +292,138 @@ var county_border_geojson_layer = new L.GeoJSON.AJAX("/static/monroe_county.json
     style: county_border_style
 });
 county_border_geojson_layer.addTo(map);
+
+function toggle_sidebar() {
+    var sb_c = document.getElementById("sidebarTest");
+    var map_c = document.getElementById("mapTest");
+    if (sb_c.style.display === "none") {
+        sb_c.style.display = "block";
+        if (document.body.clientWidth < 575) {
+            map_c.style.height = "auto";
+        }
+    } else {
+        sb_c.style.display = "none";
+        if (document.body.clientWidth < 575) {
+            map_c.style.height = "100%";
+        }
+    }
+}
+
+
+// document.getElementById('sidebarContents').innerHTML = '<ol><li>html data</li></ol>';
+
+function incTable_addRow(published, title, id) {
+    // Get a reference to the table
+    let tableID = 'inc_tbody';
+    let tableRef = document.getElementById(tableID);
+
+    // Insert a row at the end of the table
+    let newRow = tableRef.insertRow(0);
+
+    // Insert a cell in the row at index 0
+    let published_cell = newRow.insertCell(0);
+    let published_text = document.createTextNode(published);
+    published_cell.appendChild(published_text);
+
+    let title_cell = newRow.insertCell(1);
+    let title_text = document.createTextNode(title);
+    title_cell.appendChild(title_text);
+
+    let id_cell = newRow.insertCell(2);
+    let id_text = document.createTextNode(id);
+    id_cell.appendChild(id_text);
+}
+
+// Call addRow() with the table's ID
+// addRow('inc_tbody');
+
+var sidebar = L.control.sidebar('sidebar').addTo(map);
+map.addControl(sidebar);
+
+function generate_lg_html(inc_indx) {
+
+    let inc = mapMarkers[inc_indx];
+    console.log('generating html for incident list. inc=');
+    console.log(inc);
+
+    let heading = inc.title;
+    let cent = inc.id;
+    let sml = inc.lat + ', ' + inc.lon;
+    let corn = inc.published_ts;
+
+    return '<a class="list-group-item list-group-item-action flex-column align-items-start active"\n' +
+        'href="#" onclick="click_inc_in_list(' + inc_indx + ')" >\n' +
+        '<div class="d-flex w-100 justify-content-between">\n' +
+        '<h5 class="mb-1">' + heading + '</h5>\n' +
+        '<small>' + corn + '</small>\n' + '</div>\n' +
+        '<p class="mb-1">' + cent + '</p>\n' +
+        '<small>' + sml + '</small>\n' + '</a>';
+}
+
+function click_inc_in_list(index) {
+    open_inc_popup(index);
+    zoom_to_inc(index);
+}
+
+function open_inc_popup(index) {
+    let inc = mapMarkers[index];
+    inc.marker.openPopup();
+}
+
+function zoom_to_inc(index) {
+    // TODO: Track whether sidebar is open or not, then adjust view accordingly
+    let inc = mapMarkers[index];
+    let inc_lat_lng = inc.marker.getLatLng()
+    let zm_lvl = 13
+    
+    console.log('zooming to inc, inc_lat_lng=')
+    console.log(inc_lat_lng)
+    
+    map.setView(inc_lat_lng, zm_lvl);
+}
+
+var inc_lg_counter = 0;
+
+function add_incident_to_list(inc_indx) {
+    let target_el_query = "incident_list_content";
+    document.getElementById(target_el_query).innerHTML = generate_lg_html(inc_indx) + document.getElementById(target_el_query).innerHTML;
+
+}
+
+start_ms = Date.now();
+
+function add_test_inc() {
+    delta_ms = Date.now() - start_ms;
+    console.log('delta_ms=');
+    console.log(delta_ms);
+
+    delta_s = delta_ms / 1000;
+    modulo_ms = delta_ms % 1000;
+    console.log('modulo_ms=');
+    console.log(modulo_ms);
+
+    test_id = 'TEST' + String(modulo_ms);
+    test_status = 'NOSTATUS';
+    test_id_status = test_id + '_' + test_status;
+
+    test_lat = '43.1' + String(modulo_ms);
+    test_lon = '-77.6' + String(modulo_ms);
+
+    test_json_data = [
+        delta_s,
+        "2022-02-26 05:16:27",
+        "TEST CATEGORY at TEST ADDRESS, Rochester",
+        "2022-02-26 05:12:00",
+        test_id_status,
+        test_id,
+        test_status,
+        test_lat,
+        test_lon
+    ];
+
+    console.log('creating test incident:');
+    console.log(test_json_data);
+
+    update_markers(test_json_data);
+}
+
