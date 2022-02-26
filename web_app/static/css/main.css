@@ -1,114 +1,77 @@
-
-:root {
-    --navbar-height: 63px;
-    --first-color: #4723D9;
-    --z-fixed: 100
-}
-
-html, body, #container {
-  height: 100%;
-  width: 100%;
-  overflow: hidden;
-}
 body {
-  padding-top: 63px;
+    padding: 0;
+    margin: 0;
 }
 
-/*CSS by ID*/
-
-
-
-#navbarDropdown {
-    font-weight: bold;
-    color: white;
-
+html, body, #map {
+    height: 100%;
+    font: 10pt "Helvetica Neue", Arial, Helvetica, sans-serif;
 }
 
-/* CSS by CLASS */
-.navbar {
-    padding-top: 0.5rem;
-    padding-bottom: 0.5rem;
-    /*border: 3px solid #4723D9;*/
+.about_head {
+    font-style: normal;
+    color: #ff6900;
 }
 
-.navbar-collapse.in {
-    overflow-y: hidden;
+.about_body {
+    font-style: italic;
+    color: #AAA;
 }
 
-.navbar-header .navbar-icon-container {
-    margin-right: 15px;
+.warning {
+    font-style: oblique;
+    color: yellow;
 }
 
-.navbar-header .navbar-icon {
-    line-height: var(--navbar-height);
-    height: var(--navbar-height);
+.sidebar {
+    background-color: rgba(0, 0, 0, 0.27);
 }
 
-.navbar-header a.navbar-icon {
-    margin-left: 25px;
+.sidebar-content {
+    background-color: rgba(0, 0, 0, 0.27);
 }
 
-.navbar .navbar-brand {
-    font-weight: bold;
-    font-size: 25px;
-    /*border: 3px solid #7521ad;*/
+.sidebar-tabs {
+    background-color: #898989;
+}
+
+.active {
+    /*background-color: rgba(0, 0, 0, 0.27);*/
+}
+
+.sidebar-pane {
+}
+
+.sidebar-header {
+    color: #000000;
+    background-color: rgb(136, 136, 136);
+}
+
+.sidebar-tabs > li:hover, .sidebar-tabs > ul > li:hover {
+    color: #ff6900;
+    background-color: #000000;
+}
+
+.sidebar-tabs > li.active, .sidebar-tabs > ul > li.active {
+    color: #000000;
+    background-color: #ff6700;
+}
+
+.list-group-item-action {
+    color: black;
+    background-color: #ff6900;
+    border: solid 6pt black;
+}
+
+.list-group-item-action:hover {
+    background-color: rgba(255, 101, 0, 0.81);
 }
 
 
 
 
-#map {
-  width: auto;
-  height: 100%;
-  box-shadow: 0 0 10px rgba(0,0,0,0.5);
-}
-#sidebar-hide-btn {
-  margin-top: -2px;
-}
-.sidebar-wrapper {
-  width: 100%;
-  height: 100%;
-  position: relative;
-}
-.sidebar-table {
-  position: absolute;
-  width: 100%;
-  top: 103px;
-  bottom: 0px;
-  overflow: auto;
-}
 
-@media all and (max-width: 575px){
 
-  .url-break {
-    word-break: break-all;
-    word-break: break-word;
-    -webkit-hyphens: auto;
-      hyphens: auto;
-  }
-  .dropdown-menu a i{
-    color: #FFFFFF;
-  }
 
-  #sidebarTest {
 
-      height: 60px;
-  }
-}
-
-/*@media not all and (max-width: 575px) {*/
-/*  #sidebarTest {*/
-/*      height: 100%;*/
-/*  }*/
-/*  #mapTest {*/
-/*      height: 100%;*/
-/*  }*/
-/*}*/
-
-/*#sidebarTest {*/
-/*    !*height: 35%;*!*/
-/*}*/
-
-.table {
-    overflow: scroll;
-}
+/* TOOLTIPS */

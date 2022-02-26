@@ -10,6 +10,7 @@ var map = L.map('map', {
     maxZoom: 18
 });
 map.setView([43.1575, -77.6808], 10);
+map.zoomControl.setPosition('bottomright');
 
 L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
     attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
@@ -143,7 +144,7 @@ function add_new_incident_to_map(new_inc) {
     console.log('added marker to incident. updated incident=');
     console.log(new_incident_marker);
 
-    new_incident_marker.marker.openPopup();
+    // new_incident_marker.marker.openPopup();
     let num_markers = mapMarkers.unshift(new_incident_marker);
 
     console.log('added incident with marker to list. total markers=');
@@ -160,9 +161,9 @@ function add_new_incident_to_map(new_inc) {
 
     console.log('marker added -> mapMarkers=');
     console.log(mapMarkers);
-    
-    console.log('adding incident to incident table')
-    incTable_addRow(new_inc.published_timestamp, new_inc.title, new_inc.id)
+
+    console.log('adding incident to incident table');
+    add_incident_to_list(new_inc);
 }
 
 function add_marker_to_incident(inc) {
@@ -254,7 +255,7 @@ function pretty_str_recurse_objects(obj, stop_recurse_keys = [], tab_spacer = ''
 }
 
 var lc = L.control.locate({
-    position: 'topright',
+    position: 'bottomright',
     strings: {
         title: "Show me where I am, yo!"
     }
@@ -329,3 +330,39 @@ function incTable_addRow(published, title, id) {
 
 // Call addRow() with the table's ID
 // addRow('inc_tbody');
+
+var sidebar = L.control.sidebar('sidebar').addTo(map);
+map.addControl(sidebar);
+
+function generate_lg_html(heading, center, small, corner) {
+
+    heading_str = 'incident heading';
+    center_str = 'hello this is the center string';
+    small_str = 'this is a small string';
+    upper_right_str = 'forever ago';
+
+    lg_html_str = '<a class="list-group-item list-group-item-action flex-column align-items-start active"\n' +
+        'href="#">\n' + '<div class="d-flex w-100 justify-content-between">\n' +
+        '<h5 class="mb-1">' + heading + '</h5>\n' +
+        '<small>' + corner + '</small>\n' + '</div>\n' +
+        '<p class="mb-1">' + center + '</p>\n' +
+        '<small>' + small + '</small>\n' + '</a>';
+    
+
+    return lg_html_str;
+}
+
+var inc_lg_counter = 0;
+
+function add_incident_to_list(incident) {
+    target_el_query = "incident_list_content";
+    inc_lg_counter++;
+
+    head = inc_lg_counter + ' - ' + incident.title;
+    cent = incident.id;
+    sml = incident.lat + ', ' + incident.lon;
+    corn = incident.published_timestamp;
+
+    document.getElementById(target_el_query).innerHTML = generate_lg_html(head, cent, sml, corn) + document.getElementById(target_el_query).innerHTML;
+
+}
