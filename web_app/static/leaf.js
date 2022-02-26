@@ -114,7 +114,7 @@ function update_markers(json_record) {
     }
 
     console.log('incident not found in mapMarkers, adding now..');
-    add_new_incident_to_map(new_inc);
+    add_new_incident_to_map(new_inc);  // adds incident to mapMarkers
 }
 
 function add_new_incident_to_map(new_inc) {
@@ -134,7 +134,7 @@ function add_new_incident_to_map(new_inc) {
         db_ts: new_inc.db_timestamp,
         type: new_inc.status
     };
-    new_incident_marker.status.unshift(status_obj);
+    new_incident_marker.status.unshift(status_obj);  // add status to incident
 
     console.log('generated new_incident_marker:');
     console.log(new_incident_marker);
@@ -145,9 +145,15 @@ function add_new_incident_to_map(new_inc) {
     console.log(new_incident_marker);
 
     // new_incident_marker.marker.openPopup();
-    let num_markers = mapMarkers.unshift(new_incident_marker);
+    let num_markers = mapMarkers.push(new_incident_marker);
+    let index = mapMarkers.length - 1;
 
-    console.log('added incident with marker to list. total markers=');
+    console.log('added incident with marker to list.');
+
+    console.log('new incident index=');
+    console.log(index);
+
+    console.log('total markers=');
     console.log(num_markers);
 
     if (num_markers > max_num_markers) {
@@ -163,7 +169,7 @@ function add_new_incident_to_map(new_inc) {
     console.log(mapMarkers);
 
     console.log('adding incident to incident table');
-    add_incident_to_list(new_inc);
+    add_incident_to_list(index);
 }
 
 function add_marker_to_incident(inc) {
@@ -334,35 +340,90 @@ function incTable_addRow(published, title, id) {
 var sidebar = L.control.sidebar('sidebar').addTo(map);
 map.addControl(sidebar);
 
-function generate_lg_html(heading, center, small, corner) {
+function generate_lg_html(inc_indx) {
 
-    heading_str = 'incident heading';
-    center_str = 'hello this is the center string';
-    small_str = 'this is a small string';
-    upper_right_str = 'forever ago';
+    let inc = mapMarkers[inc_indx];
+    console.log('generating html for incident list. inc=');
+    console.log(inc);
 
-    lg_html_str = '<a class="list-group-item list-group-item-action flex-column align-items-start active"\n' +
-        'href="#">\n' + '<div class="d-flex w-100 justify-content-between">\n' +
+    let heading = inc.title;
+    let cent = inc.id;
+    let sml = inc.lat + ', ' + inc.lon;
+    let corn = inc.published_ts;
+
+    return '<a class="list-group-item list-group-item-action flex-column align-items-start active"\n' +
+        'href="#" onclick="click_inc_in_list(' + inc_indx + ')" >\n' +
+        '<div class="d-flex w-100 justify-content-between">\n' +
         '<h5 class="mb-1">' + heading + '</h5>\n' +
-        '<small>' + corner + '</small>\n' + '</div>\n' +
-        '<p class="mb-1">' + center + '</p>\n' +
-        '<small>' + small + '</small>\n' + '</a>';
-    
+        '<small>' + corn + '</small>\n' + '</div>\n' +
+        '<p class="mb-1">' + cent + '</p>\n' +
+        '<small>' + sml + '</small>\n' + '</a>';
+}
 
-    return lg_html_str;
+function click_inc_in_list(index) {
+    open_inc_popup(index);
+    zoom_to_inc(index);
+}
+
+function open_inc_popup(index) {
+    let inc = mapMarkers[index];
+    inc.marker.openPopup();
+}
+
+function zoom_to_inc(index) {
+    // TODO: Track whether sidebar is open or not, then adjust view accordingly
+    let inc = mapMarkers[index];
+    let inc_lat_lng = inc.marker.getLatLng()
+    let zm_lvl = 13
+    
+    console.log('zooming to inc, inc_lat_lng=')
+    console.log(inc_lat_lng)
+    
+    map.setView(inc_lat_lng, zm_lvl);
 }
 
 var inc_lg_counter = 0;
 
-function add_incident_to_list(incident) {
-    target_el_query = "incident_list_content";
-    inc_lg_counter++;
-
-    head = inc_lg_counter + ' - ' + incident.title;
-    cent = incident.id;
-    sml = incident.lat + ', ' + incident.lon;
-    corn = incident.published_timestamp;
-
-    document.getElementById(target_el_query).innerHTML = generate_lg_html(head, cent, sml, corn) + document.getElementById(target_el_query).innerHTML;
+function add_incident_to_list(inc_indx) {
+    let target_el_query = "incident_list_content";
+    document.getElementById(target_el_query).innerHTML = generate_lg_html(inc_indx) + document.getElementById(target_el_query).innerHTML;
 
 }
+
+start_ms = Date.now();
+
+function add_test_inc() {
+    delta_ms = Date.now() - start_ms;
+    console.log('delta_ms=');
+    console.log(delta_ms);
+
+    delta_s = delta_ms / 1000;
+    modulo_ms = delta_ms % 1000;
+    console.log('modulo_ms=');
+    console.log(modulo_ms);
+
+    test_id = 'TEST' + String(modulo_ms);
+    test_status = 'NOSTATUS';
+    test_id_status = test_id + '_' + test_status;
+
+    test_lat = '43.1' + String(modulo_ms);
+    test_lon = '-77.6' + String(modulo_ms);
+
+    test_json_data = [
+        delta_s,
+        "2022-02-26 05:16:27",
+        "TEST CATEGORY at TEST ADDRESS, Rochester",
+        "2022-02-26 05:12:00",
+        test_id_status,
+        test_id,
+        test_status,
+        test_lat,
+        test_lon
+    ];
+
+    console.log('creating test incident:');
+    console.log(test_json_data);
+
+    update_markers(test_json_data);
+}
+
