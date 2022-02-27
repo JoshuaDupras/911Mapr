@@ -17,16 +17,15 @@ html, body, #map {
 
 .about_head {
     font-style: normal;
-    color: #ff6900;
+    color: var(--color-accent);
 }
 
 .about_body {
-    font-style: italic;
-    color: #AAA;
+
 }
 
 .warning {
-    font-style: oblique;
+    font-style: normal;
     color: yellow;
 }
 
@@ -39,7 +38,7 @@ html, body, #map {
 }
 
 .sidebar-tabs {
-    background-color: #898989;
+    background-color: #7f7f7f;
 }
 
 .active {
@@ -51,7 +50,7 @@ html, body, #map {
 
 .sidebar-header {
     color: #000000;
-    background-color: rgb(136, 136, 136);
+    background-color: #7f7f7f;
 }
 
 .sidebar-tabs > li:hover, .sidebar-tabs > ul > li:hover {
@@ -64,10 +63,10 @@ html, body, #map {
     background-color: #ff6700;
 }
 
-.list-group-item-action {
-    color: black;
-    background-color: #ff6900;
-    border: solid 6pt black;
+.list-group-item {
+    color: #adadad;
+    background-color: rgb(57, 57, 57);
+    border: solid 6pt #ff6900;
 }
 
 .list-group-item-action:hover {
