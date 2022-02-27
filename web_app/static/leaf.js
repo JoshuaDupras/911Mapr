@@ -170,6 +170,7 @@ function add_new_incident_to_map(new_inc) {
 
     console.log('adding incident to incident table');
     add_incident_to_list(index);
+    play_alert()
 }
 
 function add_marker_to_incident(inc) {
@@ -351,7 +352,7 @@ function generate_lg_html(inc_indx) {
     let sml = inc.lat + ', ' + inc.lon;
     let corn = inc.published_ts;
 
-    return '<a class="list-group-item list-group-item-action flex-column align-items-start active"\n' +
+    return '<a class="list-group-item list-group-item-action flex-column align-items-start"\n' +
         'href="#" onclick="click_inc_in_list(' + inc_indx + ')" >\n' +
         '<div class="d-flex w-100 justify-content-between">\n' +
         '<h5 class="mb-1">' + heading + '</h5>\n' +
@@ -373,12 +374,12 @@ function open_inc_popup(index) {
 function zoom_to_inc(index) {
     // TODO: Track whether sidebar is open or not, then adjust view accordingly
     let inc = mapMarkers[index];
-    let inc_lat_lng = inc.marker.getLatLng()
-    let zm_lvl = 13
-    
-    console.log('zooming to inc, inc_lat_lng=')
-    console.log(inc_lat_lng)
-    
+    let inc_lat_lng = inc.marker.getLatLng();
+    let zm_lvl = 13;
+
+    console.log('zooming to inc, inc_lat_lng=');
+    console.log(inc_lat_lng);
+
     map.setView(inc_lat_lng, zm_lvl);
 }
 
@@ -425,5 +426,33 @@ function add_test_inc() {
     console.log(test_json_data);
 
     update_markers(test_json_data);
+}
+
+// const sound_on_toast = bootstrap.Toast.getInstance(document.getElementById('sound_on_toast'));
+// const sound_off_toast = bootstrap.Toast.getInstance(document.getElementById('sound_off_toast'));
+let muted = 1;
+function toggle_mute() {
+    if (muted < 1) {
+        console.log('muted')
+        muted = 1;
+        document.getElementById("sound_toggle").className = "fa-solid fa-volume-xmark";
+        // sound_off_toast.show()
+    } else {
+        console.log('unmuted')
+        muted = 0;
+        document.getElementById("sound_toggle").className = "fa-solid fa-volume-high unmuted";
+        // sound_on_toast.show()
+    }
+}
+
+function play_alert() {
+    if (muted < 1) {
+        const audio = new Audio(
+            'https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
+        audio.play();
+    }
+    else {
+        console.log('volume muted - not playing alert')
+    }
 }
 

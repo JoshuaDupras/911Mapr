@@ -1,3 +1,10 @@
+:root {
+    --color-primary: #646464;
+    --color-secondary: #2C394B;
+    --color-tertiary: #334756;
+    --color-accent: #FF4C29;
+}
+
 body {
     padding: 0;
     margin: 0;
@@ -67,11 +74,6 @@ html, body, #map {
     background-color: rgba(255, 101, 0, 0.81);
 }
 
-
-
-
-
-
-
-
-/* TOOLTIPS */
+.unmuted {
+    color: var(--color-accent);
+}
