@@ -1,9 +1,6 @@
 const max_num_markers = 250;
 var mapMarkers = [];
 
-var audioElement = new Audio();
-audioElement.src = "data:audio/ogg;base64,T2dnUwACAAAAAAAAAAA+...";
-
 var map = L.map('map', {
     preferCanvas: true,
     minZoom: 9,
@@ -41,67 +38,61 @@ fetch(`/getdata/${index}`)
         console.log(text);
     });
 
-const num_startup_incidents = 50;  // TODO: increase this again
-fetch(`/incidents/getlast/${num_startup_incidents}`)
+// TODO: implement last <hours/days> fetch, don't hardcode date/time
+time_str = '2022-03-01-00:00'
+fetch(`/incidents/since/${time_str}`)
     .then(response => response.json())
     .then(response => {
-        console.log('getlast response text:');
+        console.log('since response text:');
         console.log(response);
         for (const message of response) {
-            console.log('single message:');
-            console.log(message);
+            console.log('single message:' + message);
 
-            console.log('single message in json format:');
             let json_message = '{' + String(message) + '}';
-            console.log(json_message);
+            console.log('single message in json format:' + json_message);
 
-            console.log('json parsed message:');
             let message_json_parsed = JSON.parse(json_message);
-            console.log(message_json_parsed);
+            console.log('json parsed message:' + message_json_parsed);
 
-            console.log('json_message_data');
             let json_message_data = message_json_parsed.data;
-            console.log(json_message_data);
+            console.log('json_message_data' + json_message_data);
 
             update_markers(json_message_data);
         }
     });
 
 
+const live_source_delay_ms = 2500;
 setTimeout(() => {
     console.log('starting live events listener');
     var source_live = new EventSource('/incidents/live');
     source_live.addEventListener('message', function (e) {
-        console.log('got live event message:');
-        console.log(e);
+        console.log('got live event message:' + e);
+        console.log('live event message data:' + e.data);
 
-        console.log('live event message data:');
-        console.log(e.data);
+        if (e.data === 'heartbeat') {
+            console.log('got heartbeat');
+        } else {
+            let message_json_parsed = JSON.parse(e.data);
+            console.log('e.data json parsed:' + message_json_parsed);
 
-        console.log('e.data json parsed:');
-        let message_json_parsed = JSON.parse(e.data);
-        console.log(message_json_parsed);
-
-        update_markers(message_json_parsed);
+            update_markers(message_json_parsed);
+        }
     }, false);
-}, 3000);
+}, live_source_delay_ms);
 
 function update_markers(json_record) {
     console.log('got record, updating markers');
     let new_inc = new_incident_from_json(json_record);
 
     // check if id is in markers yet
-    console.log('num mapMarkers=');
-    console.log(mapMarkers.length);
+    console.log('num mapMarkers=' + mapMarkers.length);
 
     console.log('mapMarkers=');
     console.log(mapMarkers);
 
     for (const i in mapMarkers) {
         existing_marker = mapMarkers[i];
-
-        // console.log('existing marker=');
-        // console.log(existing_marker);
 
         // console.log('checking if marker IDs are equal (old:' + existing_marker.id + ', new:' + new_inc.id);
 
@@ -118,7 +109,6 @@ function update_markers(json_record) {
 }
 
 function add_new_incident_to_map(new_inc) {
-
     // new incident ID, make new marker
     let new_incident_marker = {
         id: new_inc.id,
@@ -146,31 +136,25 @@ function add_new_incident_to_map(new_inc) {
 
     // new_incident_marker.marker.openPopup();
     let num_markers = mapMarkers.push(new_incident_marker);
-    let index = mapMarkers.length - 1;
 
-    console.log('added incident with marker to list.');
-
-    console.log('new incident index=');
-    console.log(index);
-
-    console.log('total markers=');
-    console.log(num_markers);
+    console.log('added incident with marker to mapMarkers.');
 
     if (num_markers > max_num_markers) {
+        console.log('reached maximum number of markers (' + max_num_markers + '), removing the earliest.')
         map.removeLayer(mapMarkers[(max_num_markers - 1)]);
         mapMarkers.pop();
     }
 
-    // audioElement.play();  # TODO: enable audio alerts, need toggle button on map as well
-
     console.log('marker add complete. total markers = ' + mapMarkers.length);
+    let index = mapMarkers.length - 1;
+    console.log('new incident index = ' + index);
 
     console.log('marker added -> mapMarkers=');
     console.log(mapMarkers);
 
     console.log('adding incident to incident table');
-    add_incident_to_list(index);
-    play_alert()
+    add_incident_to_sidebar_list(index);
+    play_alert();
 }
 
 function add_marker_to_incident(inc) {
@@ -342,10 +326,8 @@ var sidebar = L.control.sidebar('sidebar').addTo(map);
 map.addControl(sidebar);
 
 function generate_lg_html(inc_indx) {
-
     let inc = mapMarkers[inc_indx];
-    console.log('generating html for incident list. inc=');
-    console.log(inc);
+    console.log('generating html for sidebar incident list. inc index=' + inc_indx);
 
     let heading = inc.title;
     let cent = inc.id;
@@ -385,10 +367,10 @@ function zoom_to_inc(index) {
 
 var inc_lg_counter = 0;
 
-function add_incident_to_list(inc_indx) {
+function add_incident_to_sidebar_list(inc_indx) {
+    console.log('adding incident to sidebar list with index = ' + inc_indx)
     let target_el_query = "incident_list_content";
     document.getElementById(target_el_query).innerHTML = generate_lg_html(inc_indx) + document.getElementById(target_el_query).innerHTML;
-
 }
 
 start_ms = Date.now();
@@ -431,14 +413,15 @@ function add_test_inc() {
 // const sound_on_toast = bootstrap.Toast.getInstance(document.getElementById('sound_on_toast'));
 // const sound_off_toast = bootstrap.Toast.getInstance(document.getElementById('sound_off_toast'));
 let muted = 1;
+
 function toggle_mute() {
     if (muted < 1) {
-        console.log('muted')
+        console.log('muted');
         muted = 1;
         document.getElementById("sound_toggle").className = "fa-solid fa-volume-xmark";
         // sound_off_toast.show()
     } else {
-        console.log('unmuted')
+        console.log('unmuted');
         muted = 0;
         document.getElementById("sound_toggle").className = "fa-solid fa-volume-high unmuted";
         // sound_on_toast.show()
@@ -450,9 +433,8 @@ function play_alert() {
         const audio = new Audio(
             'https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
         audio.play();
-    }
-    else {
-        console.log('volume muted - not playing alert')
+    } else {
+        console.log('volume muted - not playing alert');
     }
 }
 

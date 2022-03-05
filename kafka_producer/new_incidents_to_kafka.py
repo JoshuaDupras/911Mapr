@@ -3,11 +3,10 @@ import os
 import time
 
 import mysql.connector as con
-from pykafka import KafkaClient
+from kafka import KafkaProducer
 
 # KAFKA PRODUCER
-kafka_hostname = 'kafka_broker'
-kafka_port = 29092
+kafka_server = 'kafka_broker:29092'
 kafka_topic = 'live_incidents'
 
 starting_row_uid = 0
@@ -26,6 +25,9 @@ if db_pw is None:
 
 new_incident_query_delay_secs = 1
 
+prod = KafkaProducer(bootstrap_servers=kafka_server
+                     )
+
 
 def get_ts():
     return time.strftime("%Y%m%d_%H%M%S")
@@ -36,6 +38,7 @@ def get_new_incidents():
     try:
         uid = None
 
+        last_keepalive_time = False
         while True:
             with con.connect(
                     host=db_host,
@@ -70,8 +73,15 @@ def get_new_incidents():
                 toc = time.time()
                 print(f"\tSELECT query completed in {toc - tic} seconds")
 
-            if new_records:
-                send_records_to_kafka(new_records)
+            keepalive_enable = True
+            if keepalive_enable:
+                if new_records:
+                    last_keepalive_time = send_records_to_kafka(prod, new_records)
+                else:
+                    last_keepalive_time = keepalive(prod, last_keepalive_time)
+            else:
+                if new_records:
+                    send_records_to_kafka(prod, new_records)
 
             print(f'connection closed - sleeping {new_incident_query_delay_secs} second(s)...\n')
             time.sleep(new_incident_query_delay_secs)
@@ -80,11 +90,7 @@ def get_new_incidents():
         print(e)
 
 
-def send_records_to_kafka(records):
-    client = KafkaClient(hosts=f"{kafka_hostname}:{kafka_port}")
-    topic = client.topics[kafka_topic]
-    producer = topic.get_sync_producer()
-
+def send_records_to_kafka(producer, records):
     print(f'{get_ts()} - trying to send {len(records)} records to Kafka')
     for raw_record in records:
         uid, ts, title, published_ts, id_status, id, status, lat, lon = raw_record
@@ -96,8 +102,26 @@ def send_records_to_kafka(records):
         message = str(json_string)
         print(f'{get_ts()} - Producing message to Kafka:{message}')
 
-        producer.produce(message.encode('ascii'))
+        producer.send(kafka_topic, message.encode('ascii'))
     print(f'{get_ts()} - Kafka records sent')
+    return time.time()
+
+
+def keepalive(kafka_prod, last_keepalive_t):
+    cadence_s = 30
+    attempt_t = time.time()
+    if not last_keepalive_t or (attempt_t - last_keepalive_t) > cadence_s:
+        return send_keepalive(producer=kafka_prod)
+    return last_keepalive_t
+
+
+def send_keepalive(producer):
+    message = 'keepalive'
+    print(f'{get_ts()} - Producing message to Kafka:{message}')
+
+    producer.send(kafka_topic, message.encode('ascii'))
+    print(f'{get_ts()} - Kafka records sent')
+    return time.time()
 
 
 if __name__ == '__main__':
