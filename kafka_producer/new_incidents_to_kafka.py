@@ -73,7 +73,7 @@ def get_new_incidents():
                 toc = time.time()
                 print(f"\tSELECT query completed in {toc - tic} seconds")
 
-            keepalive_enable = True
+            keepalive_enable = False
             if keepalive_enable:
                 if new_records:
                     last_keepalive_time = send_records_to_kafka(prod, new_records)

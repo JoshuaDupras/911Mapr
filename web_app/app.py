@@ -1,7 +1,7 @@
 import logging
 import re
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from flask import Flask, render_template, request, jsonify, Response
 from kafka import KafkaConsumer, TopicPartition
@@ -76,12 +76,30 @@ def get_time_range(time_range_str_start, time_range_str_end):
 
 @app.route('/incidents/since/<time_range_str>', methods=['GET'])
 def get_since(time_range_str):
+    app.logger.info(f'retrieving incidents that occurred after {time_range_str}')
     request_start_ts = time.time()
     start_dt = process_time_range_str(time_range_str)
     end_dt = datetime.now()
     messages = consume_time_range(start_dt, end_dt)
     app.logger.info(f'retrieved {len(messages)} messages in {time.time() - request_start_ts} seconds')
     return jsonify(messages)
+
+
+@app.route('/incidents/past/hours/<hours>', methods=['GET'])
+def past_hours(hours):
+    app.logger.info(f'retrieving incidents from the last {hours} hours')
+    request_start_ts = time.time()
+    start_dt = datetime.now() - timedelta(hours=int(hours))
+    end_dt = datetime.now()
+    messages = consume_time_range(start_dt, end_dt)
+    app.logger.info(f'retrieved {len(messages)} messages in {time.time() - request_start_ts} seconds')
+    return jsonify(messages)
+
+
+@app.route('/incidents/past/days/<days>', methods=['GET'])
+def past_days(days):
+    app.logger.info(f'retrieving incidents from the last {days} days')
+    past_hours(int(days) * 24)
 
 
 def now_ms():
@@ -124,7 +142,7 @@ def consume_time_range(start_dt, end_dt):
         msg_list.append('"data":{0}'.format(decoded_msg))
         app.logger.info('msg appended to msg_list')
     app.logger.info(f'consumed {len(msg_list)} messages between "{start_dt.ctime()}" and "{end_dt.ctime()} in '
-                     f'{time.time() - func_start_ts} seconds"')
+                    f'{time.time() - func_start_ts} seconds"')
 
     app.logger.info('closing consumer')
     c.close()
@@ -181,6 +199,8 @@ def process_time_range_str(time_range_str):
 
 # Consumer API
 disable_live_stream = False
+
+
 @app.route('/incidents/live')
 def incident_stream():
     if disable_live_stream:
@@ -193,6 +213,7 @@ def incident_stream():
     # consumer.seek_to_end(tp)
 
     ignore_list = ['keepalive']  # TODO: re-enable
+
     # ignore_list = None  # TODO: remove debug list
 
     def events():

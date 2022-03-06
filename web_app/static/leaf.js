@@ -39,12 +39,15 @@ fetch(`/getdata/${index}`)
     });
 
 // TODO: implement last <hours/days> fetch, don't hardcode date/time
-time_str = '2022-03-01-00:00'
-fetch(`/incidents/since/${time_str}`)
+fetch_hours = 3
+fetch(`/incidents/past/hours/${fetch_hours}`)
     .then(response => response.json())
     .then(response => {
-        console.log('since response text:');
-        console.log(response);
+        // console.log('since response text:');
+        // console.log(response);
+
+        console.log('Loaded ' + response.length + ' incident records from the past ' + fetch_hours + ' hours')
+
         for (const message of response) {
             console.log('single message:' + message);
 
@@ -67,15 +70,15 @@ setTimeout(() => {
     console.log('starting live events listener');
     var source_live = new EventSource('/incidents/live');
     source_live.addEventListener('message', function (e) {
-        console.log('got live event message:' + e);
-        console.log('live event message data:' + e.data);
+        // console.log('got live event message:' + e);
+        // console.log('live event message data:' + e.data);
 
         if (e.data === 'heartbeat') {
-            console.log('got heartbeat');
+            // console.log('got heartbeat');
+
         } else {
             let message_json_parsed = JSON.parse(e.data);
-            console.log('e.data json parsed:' + message_json_parsed);
-
+            // console.log('e.data json parsed:' + message_json_parsed);
             update_markers(message_json_parsed);
         }
     }, false);
