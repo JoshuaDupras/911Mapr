@@ -1,19 +1,29 @@
 import logging
-import math
-from itertools import islice
+import re
+import time
+from datetime import datetime, timedelta
 
 from flask import Flask, render_template, request, jsonify, Response
-from pykafka import KafkaClient
-from pykafka.common import OffsetType
+from kafka import KafkaConsumer, TopicPartition
 
-logging.basicConfig(level=logging.DEBUG, format='{asctime} | {levelname:^8} | {name}.{lineno} : {message}', style='{')
-
-
-def get_kafka_client():
-    return KafkaClient(hosts='kafka_broker:29092')
-
+logging.basicConfig(level=logging.INFO, format='{asctime} | {levelname:^8} | {name}.{lineno} : {message}', style='{')
 
 app = Flask(__name__)
+
+incidents_topic = 'live_incidents'
+kafka_server = 'kafka_broker:29092'
+partition_num = 0
+
+
+def get_consumer():
+    app.logger.info(f'Creating Kafka Consumer and connecting to broker...')
+    consumer = KafkaConsumer(incidents_topic,
+                             bootstrap_servers=kafka_server,
+                             enable_auto_commit=True,  # TODO:test this on/off
+                             # value_deserializer = lambda m: json.loads(m.decode('utf-8'))  # TODO: inline deserialization
+                             )
+    app.logger.info(f'Kafka Consumer connected to Broker')
+    return consumer
 
 
 @app.route('/')
@@ -37,6 +47,8 @@ def testfn():
 
 ######## Example data, in sets of 3 ############
 data = list(range(1, 300, 3))
+
+
 # app.logger.info(data)
 
 
@@ -52,65 +64,202 @@ def data_get(index_no):
         return 't_in = %s ; result: %s ;' % (index_no, data[int(index_no)])
 
 
-# Consumer API
-@app.route('/incidents/getlast/<num_messages>', methods=['GET'])  # topic name comes from leaf.js
-def get_last(num_messages):
-    # TODO: input checking on num_messages, int, limit range
+@app.route('/incidents/range/<time_range_str_start>_<time_range_str_end>', methods=['GET'])
+def get_time_range(time_range_str_start, time_range_str_end):
+    request_start_ts = time.time()
+    start_dt = process_time_range_str(time_range_str_start)
+    end_dt = process_time_range_str(time_range_str_end)
+    messages = consume_time_range(start_dt, end_dt)
+    app.logger.info(f'retrieved {len(messages)} messages in {time.time() - request_start_ts} seconds')
+    return jsonify(messages)
 
-    app.logger.info(f'{request.remote_addr}:getting last {num_messages} messages"')
-    client = get_kafka_client()
 
-    app.logger.info(f'{request.remote_addr}:Kafka client connected')
+@app.route('/incidents/since/<time_range_str>', methods=['GET'])
+def get_since(time_range_str):
+    app.logger.info(f'retrieving incidents that occurred after {time_range_str}')
+    request_start_ts = time.time()
+    start_dt = process_time_range_str(time_range_str)
+    end_dt = datetime.now()
+    messages = consume_time_range(start_dt, end_dt)
+    app.logger.info(f'retrieved {len(messages)} messages in {time.time() - request_start_ts} seconds')
+    return jsonify(messages)
 
-    def consume_last(n):
-        num_msgs = int(n)
-        app.logger.info(f'{request.remote_addr}:creating consumer and retrieving last {num_msgs} messages')
 
-        # TODO: pretty sure consumer hangs if no messages found
-        consumer = client.topics['live_incidents'].get_simple_consumer(auto_offset_reset=OffsetType.LATEST,
-                                                                       reset_offset_on_start=True,
-                                                                       consumer_timeout_ms=1000)
-        # how many messages should we get from the end of each partition?
-        max_partition_rewind = int(math.ceil(num_msgs / len(consumer._partitions)))
-        # find the beginning of the range we care about for each partition
-        offsets = [(p, op.last_offset_consumed - max_partition_rewind)
-                   for p, op in consumer._partitions.items()]
-        # if we want to rewind before the beginning of the partition, limit to beginning
-        offsets = [(p, (o if o > -1 else -2)) for p, o in offsets]
-        # reset the consumer's offsets
-        app.logger.info(f'{request.remote_addr}:offsets={offsets}')
-        consumer.reset_offsets(offsets)
+@app.route('/incidents/past/hours/<hours>', methods=['GET'])
+def past_hours(hours):
+    app.logger.info(f'retrieving incidents from the last {hours} hours')
+    request_start_ts = time.time()
+    start_dt = datetime.now() - timedelta(hours=int(hours))
+    end_dt = datetime.now()
+    messages = consume_time_range(start_dt, end_dt)
+    app.logger.info(f'retrieved {len(messages)} messages in {time.time() - request_start_ts} seconds')
+    return jsonify(messages)
 
-        message_list = []
-        for message in islice(consumer, num_msgs):
-            app.logger.info(f'{request.remote_addr}:init messages: offset={message.offset}, value={message.value}')
-            # message_list.append(message.value.decode())
-            message_list.append('"data":{0}'.format(message.value.decode()))
-        return jsonify(message_list)
 
-    app.logger.info(f'{request.remote_addr}:returning response')
-    return consume_last(num_messages)
+@app.route('/incidents/past/days/<days>', methods=['GET'])
+def past_days(days):
+    app.logger.info(f'retrieving incidents from the last {days} days')
+    past_hours(int(days) * 24)
+
+
+def now_ms():
+    return time.time() * 1000
+
+
+def consume_time_range(start_dt, end_dt):
+    func_start_ts = time.time()
+    start_ms = start_dt.timestamp() * 1000
+    end_ms = end_dt.timestamp() * 1000
+    app.logger.info(f"consuming from time range: date_start_ms={start_ms}, date_end_ms={end_ms}")
+    app.logger.info(f'current time = {datetime.now().ctime()}')
+
+    c = get_consumer()  # doesn't do any consuming, only metadata
+    tp = TopicPartition(incidents_topic, partition_num)  # partition n. 0
+
+    start_offset = offsets_for_times(c, [tp], start_ms)[tp]
+    app.logger.info(f'start offsets={start_offset}')
+    end_offset = offsets_for_times(c, [tp], end_ms)[tp] - 1
+    app.logger.info(f'end offsets={end_offset}')
+    app.logger.info(f'start offsets={start_offset}, end offsets={end_offset}')
+
+    if start_offset == end_offset:
+        return []
+
+    c.seek(tp, start_offset)
+
+    app.logger.info(f'consuming between offsets {start_offset} and {end_offset}')
+    msg_list = []
+    msg_index = -1
+    for msg in c:
+        app.logger.info(f'got msg with offset={msg.offset}')
+        if msg.offset >= end_offset:
+            app.logger.info(f'msg offset ({msg.offset}) is greater or equal to end offset ({end_offset}), breaking...')
+            break
+        msg_index += 1
+        app.logger.info(f'msg_index={msg_index}, msg_offset={msg.offset}, msg_value={msg.value}')
+        decoded_msg = msg.value.decode()
+        app.logger.info('msg decoded')
+        msg_list.append('"data":{0}'.format(decoded_msg))
+        app.logger.info('msg appended to msg_list')
+    app.logger.info(f'consumed {len(msg_list)} messages between "{start_dt.ctime()}" and "{end_dt.ctime()} in '
+                    f'{time.time() - func_start_ts} seconds"')
+
+    app.logger.info('closing consumer')
+    c.close()
+    app.logger.info('consumer closed. returning msg_list..')
+    return msg_list
+
+
+def offsets_for_times(consumer, partitions, timestamp_ms):
+    """Augment KafkaConsumer.offsets_for_times to not return None
+
+    Parameters
+    ----------
+    consumer : kafka.KafkaConsumer
+        This consumer must only be used for collecting metadata, and not
+        consuming. API's will be used that invalidate consuming.
+    partitions : list of kafka.TopicPartition
+    timestamp_ms : number
+        Timestamp, in seconds since unix epoch, to return offsets for.
+
+    Returns
+    -------
+    dict from kafka.TopicPartition to integer offset
+    """
+    # Kafka uses millisecond timestamps
+    response = consumer.offsets_for_times({p: timestamp_ms for p in partitions})
+    offsets = {}
+    for tp, offset_and_timestamp in response.items():
+        if offset_and_timestamp is None:
+            app.logger.warning(f'offset_and_timestamp is None, timestamp_ms={timestamp_ms}')
+            # No messages exist after timestamp. Fetch latest offset.
+            # consumer.assign([tp])
+            consumer.seek_to_end(tp)
+            offsets[tp] = consumer.position(tp)
+        else:
+            offsets[tp] = offset_and_timestamp.offset
+    app.logger.info(f'getting offsets: timestamp_ms={timestamp_ms}, offsets={offsets}')
+    return offsets
+
+
+def process_time_range_str(time_range_str):
+    # time range should be in the format:
+    # "2022-03-01-00:50_2022-03-05-12:22"
+    reg_exp = re.compile(r'(\d{4})-(\d{2})-(\d{2})-(\d{2}):(\d{2})')
+    match = reg_exp.match(time_range_str)
+    if not match:
+        raise ValueError(
+            f'Invalid time_range_str. Expected format = "YYYY-MM-DD-HR:MN_YYYY-MM-DD-HR:MN" ("start_end"), '
+            f'but received "{time_range_str}"')
+    (yyyy, mm, dd, hr, min) = tuple(map(int, match.groups()))
+    dt = datetime(yyyy, mm, dd, hr, min)
+    app.logger.info(f'processing complete on time_range_str: "{time_range_str}" = "{dt.ctime()}"')
+    return dt
 
 
 # Consumer API
 disable_live_stream = False
-@app.route('/incidents/live')  # topic name comes from leaf.js
-def get_messages(topicname='live_incidents'):
+
+
+@app.route('/incidents/live')
+def incident_stream():
     if disable_live_stream:
         app.logger.warning('live event stream disabled by flask backend')
-        return 0
+        return 'disabled'
 
-    app.logger.info(f'getting messages with topic name={topicname}')
-    client = get_kafka_client()
+    consumer = get_consumer()
+    tp = TopicPartition(incidents_topic, partition_num)  # partition n. 0
 
-    app.logger.info('got Kafka client, processing events now..')
+    # consumer.seek_to_end(tp)
+
+    ignore_list = ['keepalive']  # TODO: re-enable
+
+    # ignore_list = None  # TODO: remove debug list
 
     def events():
-        for i in client.topics[topicname].get_simple_consumer(auto_offset_reset=OffsetType.LATEST,
-                                                              reset_offset_on_start=True):
-            yield 'data:{0}\n\n'.format(i.value.decode())
+        app.logger.info('starting kafka live consumer loop')
+        last_msg_ts = None
+        poll_delay_s = 5  # TODO: drop this to 0.5 in prod
+        heartbeat_cadence_s = 30  # TODO: this could probably be 30 or more
 
-    app.logger.info('returning response')
+        last_msg_ts = None
+        while True:
+            app.logger.info(f'top of while True loop, delaying consumer poll by {poll_delay_s} seconds')
+            time.sleep(poll_delay_s)
+
+            poll_response = consumer.poll()
+            if poll_response == {}:
+                pass
+            else:
+                # consumed a record, let's make sure it's valid
+                app.logger.info(f'poll_response={poll_response}')
+
+                record = poll_response[tp][0]
+                app.logger.info(f'record={record}')
+
+                msg = record.value.decode()
+                app.logger.info(f'msg={msg}')
+
+                if msg in ignore_list:
+                    app.logger.warning(f'ignoring msg={msg}')
+                else:
+                    #  got a valid message, yield it
+                    offset = record.offset
+                    app.logger.info(f'offset={offset}')
+
+                    response = 'data:{0}\n\n'.format(msg)
+                    app.logger.info(f'yielding response = {response}')
+                    yield response
+                    last_msg_ts = time.time()
+                    continue
+
+            if last_msg_ts is None or time.time() - last_msg_ts > heartbeat_cadence_s:
+                app.logger.info(f'heartbeat cadence exceeded ({heartbeat_cadence_s} seconds) - yielding heartbeat')
+                yield 'data:{0}\n\n'.format('heartbeat')
+                last_msg_ts = time.time()
+
+            app.logger.info('bottom of while True loop')
+
     return Response(events(), mimetype="text/event-stream")
 
 
