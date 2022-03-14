@@ -1,4 +1,5 @@
 import logging
+import os
 import re
 import time
 from datetime import datetime, timedelta
@@ -10,8 +11,20 @@ logging.basicConfig(level=logging.INFO, format='{asctime} | {levelname:^8} | {na
 
 app = Flask(__name__)
 
-incidents_topic = 'live_incidents'
-kafka_server = 'kafka_broker:29092'
+# printing environment variables
+print(f'environment variables:\n{os.environ}')
+
+kafka_host = os.getenv('KAFKA_HOST')
+print(f'kafka_host={kafka_host}')
+
+kafka_port = int(os.getenv('KAFKA_PORT'))
+print(f'kafka_port={kafka_port}')
+
+kafka_server = f'{kafka_host}:{kafka_port}'
+
+incidents_topic = os.getenv('KAFKA_TOPIC')
+print(f'incidents_topic={incidents_topic}')
+
 partition_num = 0
 
 

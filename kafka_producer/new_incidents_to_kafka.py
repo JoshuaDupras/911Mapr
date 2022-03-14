@@ -5,15 +5,22 @@ import time
 import mysql.connector as con
 from kafka import KafkaProducer
 
-# KAFKA PRODUCER
-kafka_server = 'kafka_broker:29092'
-kafka_topic = 'live_incidents'
-
 starting_row_uid = 0
 
+# printing environment variables
+print(f'environment variables:\n{os.environ}')
+
 db_host = os.getenv('MYSQL_HOST')
+print(f'db_host={db_host}')
+
+db_port = int(os.getenv('MYSQL_PORT'))
+print(f'db_port={db_port}')
+
 db_name = os.getenv('MYSQL_DATABASE')
+print(f'db_name={db_name}')
+
 db_table_name = os.getenv('MYSQL_TABLE')
+print(f'db_table_name={db_table_name}')
 
 db_user = os.getenv('MYSQL_USER')
 print(f'db_user={db_user}')
@@ -21,16 +28,27 @@ print(f'db_user={db_user}')
 db_pw = os.getenv('MYSQL_PASSWORD')
 if db_pw is None:
     raise ValueError('Password Environment Variable not found!')
-# print(f'db_pw={db_pw}')
+
+# KAFKA PRODUCER
+kafka_host = os.getenv('KAFKA_HOST')
+kafka_port = os.getenv('KAFKA_PORT')
+kafka_server = f'{kafka_host}:{kafka_port}'
+
+kafka_topic = os.getenv('KAFKA_TOPIC')
 
 new_incident_query_delay_secs = 1
 
-prod = KafkaProducer(bootstrap_servers=kafka_server
-                     )
+debug_disable_kafka = False
 
 
 def get_ts():
     return time.strftime("%Y%m%d_%H%M%S")
+
+
+if not debug_disable_kafka:
+    prod = KafkaProducer(bootstrap_servers=kafka_server)
+else:
+    print(f'{get_ts()}: DEBUG - KAFKA CONNECTION DISABLED')
 
 
 def get_new_incidents():
@@ -45,11 +63,11 @@ def get_new_incidents():
                     user=db_user,
                     password=db_pw,
                     database=db_name,
-            ) as connection:
+            ) as db_connection:
                 print('db connection established')
 
                 tic = time.time()
-                with connection.cursor() as cursor:
+                with db_connection.cursor() as cursor:
                     if not uid:
                         last_row_query = f'select *from {db_table_name} ORDER BY uid DESC LIMIT 1;'
                         cursor.execute(last_row_query)
@@ -74,14 +92,17 @@ def get_new_incidents():
                 print(f"\tSELECT query completed in {toc - tic} seconds")
 
             keepalive_enable = False
-            if keepalive_enable:
-                if new_records:
-                    last_keepalive_time = send_records_to_kafka(prod, new_records)
+            if not debug_disable_kafka:
+                if keepalive_enable:
+                    if new_records:
+                        last_keepalive_time = send_records_to_kafka(prod, new_records)
+                    else:
+                        last_keepalive_time = keepalive(prod, last_keepalive_time)
                 else:
-                    last_keepalive_time = keepalive(prod, last_keepalive_time)
+                    if new_records:
+                        send_records_to_kafka(prod, new_records)
             else:
-                if new_records:
-                    send_records_to_kafka(prod, new_records)
+                print(f'{get_ts()}: DEBUG - KAFKA CONNECTION DISABLED')
 
             print(f'connection closed - sleeping {new_incident_query_delay_secs} second(s)...\n')
             time.sleep(new_incident_query_delay_secs)

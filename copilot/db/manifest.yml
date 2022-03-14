@@ -1,0 +1,46 @@
+# The manifest for the "db" service.
+# Read the full specification for the "Backend Service" type at:
+#  https://aws.github.io/copilot-cli/docs/manifest/backend-service/
+
+# Your service name will be used in naming your resources like log groups, ECS services, etc.
+name: db
+type: Backend Service
+
+# Your service is reachable at "http://db.${COPILOT_SERVICE_DISCOVERY_ENDPOINT}:3306" but is not public.
+
+# Configuration for your containers and service.
+image:
+  build:
+  # Docker build arguments. For additional overrides: https://aws.github.io/copilot-cli/docs/manifest/backend-service/#image-build
+    context: db/
+  # Port exposed through your container to route traffic to it.
+  port: 3306
+
+cpu: 512       # Number of CPU units for the task.
+memory: 2048    # Amount of memory in MiB used by the task.
+count: 1       # Number of tasks that should be running in your service.
+exec: true     # Enable running commands in your container.
+
+# Optional fields for more advanced use-cases.
+#
+variables: # Pass environment variables as key value pairs.
+  LOG_LEVEL: info
+  MYSQL_DATABASE: incident_db
+  MYSQL_TABLE: incidents
+
+secrets: # Pass secrets from AWS Systems Manager (SSM) Parameter Store.
+  MYSQL_ROOT_PASSWORD: '/copilot/${COPILOT_APPLICATION_NAME}/${COPILOT_ENVIRONMENT_NAME}/secrets/MYSQL_ROOT_PASSWORD'
+  MYSQL_USER: '/copilot/${COPILOT_APPLICATION_NAME}/${COPILOT_ENVIRONMENT_NAME}/secrets/MYSQL_USER'
+  MYSQL_PASSWORD: '/copilot/${COPILOT_APPLICATION_NAME}/${COPILOT_ENVIRONMENT_NAME}/secrets/MYSQL_PASSWORD'
+
+# You can override any of the values defined above by environment.
+#environments:
+#  test:
+#    count: 2               # Number of tasks to run for the "test" environment.
+
+storage:
+  volumes:
+    db_volume:
+      efs: true
+      path: /var/lib/db
+      read_only: false

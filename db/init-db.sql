@@ -2,9 +2,7 @@ CREATE DATABASE  IF NOT EXISTS `incident_db`;
 
 USE `incident_db`;
 
-DROP TABLE IF EXISTS `incidents`;
-
-CREATE TABLE `incidents`
+CREATE TABLE IF NOT EXISTS `incidents`
 (
     `uid`           int       NOT NULL AUTO_INCREMENT,
     `timestamp`     timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -19,6 +17,3 @@ CREATE TABLE `incidents`
     UNIQUE KEY `uid_UNIQUE` (`uid`),
     UNIQUE KEY `inc_id_status_UNIQUE` (`inc_id_status`)
 );
-
-CREATE USER $(MYSQL_USER)@'%' IDENTIFIED BY $(MYSQL_USER);
-GRANT ALL PRIVILEGES ON * . * TO $(MYSQL_USER)@'%';

@@ -2,13 +2,24 @@ import os
 import time
 
 import feedparser
-import mysql.connector as con
+import mysql.connector
 
 delay_sec = 10
 
+# printing environment variables
+print(f'environment variables:\n{os.environ}')
+
 db_host = os.getenv('MYSQL_HOST')
+print(f'db_host={db_host}')
+
+db_port = int(os.getenv('MYSQL_PORT'))
+print(f'db_port={db_port}')
+
 db_name = os.getenv('MYSQL_DATABASE')
+print(f'db_name={db_name}')
+
 db_table_name = os.getenv('MYSQL_TABLE')
+print(f'db_table_name={db_table_name}')
 
 db_user = os.getenv('MYSQL_USER')
 print(f'db_user={db_user}')
@@ -66,22 +77,29 @@ def get_published_ts(raw_published, raw_published_parsed):
     return ts
 
 
-def rss_to_mysql():
+def parse_feed(url='https://www.monroecounty.gov/911/rss.php'):
     print(f'{get_ts()}: connecting to RSS feed and scraping incidents')
+    news_feed = feedparser.parse(url)
+    print(f'{get_ts()}: scraping complete')
+    return news_feed
 
+
+def rss_to_mysql():
+    print(f'{get_ts()}: rss_to_mysql()')
     try:
-        news_feed = feedparser.parse("https://www.monroecounty.gov/911/rss.php")
+        rss_feed = parse_feed()
 
-        with con.connect(
+        print(f'{get_ts()}: attempting MySQL connection')
+        with mysql.connector.connect(
                 host=db_host,
-                port=3306,
+                port=db_port,
                 user=db_user,
                 password=db_pw,
                 database=db_name,
         ) as connection:
-            print(connection)
-            entries = news_feed.entries
-            print(f'{time.strftime("%Y%m%d_%H%M%S")}: found {len(entries)} incidents - attempting to send to db..')
+            print(f'{get_ts()}: mysql connected - connection:{connection}')
+            entries = rss_feed.entries
+            print(f'{get_ts()}: found {len(entries)} incidents - blindly pushing them to database')
             for incident_dic in entries:
                 # print('\n\n******************************************')
                 # print(f'    {time.strftime("%Y%m%d_%H%M%S")} - {incident_dic}')
@@ -104,16 +122,18 @@ def rss_to_mysql():
                 record = (title, published_ts, inc_id_status, inc_id, status, geo_lat, geo_lon)
 
                 send_incident_to_mysql(connection, record)
+            print(f'{get_ts()}: push complete, closing connection...')
 
-    except con.Error as e:
-        print(e)
+        print(f'{get_ts()} mysql disconnected')
+
+    except mysql.connector.Error as e:
+        print(f'{get_ts()}: MySQL connection error: {e}')
 
 
 def main():
-    print('rss_scraper main()')
+    print(f'{get_ts()}: rss_scraper main()')
     while True:
         rss_to_mysql()
-
         time.sleep(delay_sec)
 
 

@@ -2,14 +2,16 @@ version: "3.9"
 
 services:
   db:
+    container_name: db
+    image: 901235749806.dkr.ecr.us-east-2.amazonaws.com/911mapr/db
     ports:
-      - "32000:3306"
-    build:
-      context: ./mysql
+      - "3306:3306"
+#    build:
+#      context: ./db
     networks:
       - db_net
     volumes:
-      - db_data:/var/lib/mysql
+      - db_data:/var/lib/db
     environment:
       MYSQL_DATABASE:
       MYSQL_TABLE:
@@ -17,26 +19,38 @@ services:
       MYSQL_USER:
       MYSQL_PASSWORD:
       TZ: US/Eastern
-    restart: always
+#    restart: always
+#    logging:
+#      driver: "awslogs"
+#      options:
+#        awslogs-region: "us-east-2"
 
   zookeeper:
     container_name: zookeeper
-    image: confluentinc/cp-zookeeper:6.2.0
+    image: confluentinc/cp-zookeeper:6.2.2
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
     networks:
       - kafka_net
+    volumes:
+      - kafka:/zookeeper
+#    logging:
+#      driver: "awslogs"
+#      options:
+#        awslogs-region: "us-east-2"
 
   kafka_broker:
-    image: confluentinc/cp-kafka:6.2.0
     container_name: kafka_broker
+    image: confluentinc/cp-kafka:6.2.2
     ports:
       # To learn about configuring Kafka for access across networks see
       # https://www.confluent.io/blog/kafka-client-cannot-connect-to-broker-on-aws-on-docker-etc/
       - "9092:9092"
     depends_on:
       - zookeeper
+    volumes:
+      - kafka:/broker
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
@@ -46,55 +60,70 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_HEAP_OPTS: '-Xmx512M -Xms512M'
-    networks:
-      - kafka_net
+#    networks:
+#      - kafka_net
+#    logging:
+#      driver: "awslogs"
+#      options:
+#        awslogs-region: "us-east-2"
 
-  # This "container" is a workaround to pre-create topics
-  # source: https://github.com/confluentinc/examples/blob/5.1.1-post/microservices-orders/docker-compose.yml#L182-L215
-  kafka_setup:
-    image: confluentinc/cp-kafka:6.2.0
-    hostname: kafka_setup
-    container_name: kafka_setup
-    depends_on:
-      - zookeeper
-      - kafka_broker
-    command: "bash -c 'echo Waiting for Kafka to be ready... && \
-                       cub kafka-ready -b kafka_broker:9092 1 20 && \
-                       kafka-topics --create --if-not-exists --zookeeper zookeeper:2181 --partitions 1 --replication-factor 1 --topic live_incidents'"
-    environment:
-      # The following settings are listed here only to satisfy the image's requirements.
-      # We override the image's `command` anyways, hence this container will not start a broker.
-      KAFKA_BROKER_ID: ignored
-      KAFKA_ZOOKEEPER_CONNECT: ignored
-    networks:
-      - kafka_net
+#  # This "container" is a workaround to pre-create topics
+#  # source: https://github.com/confluentinc/examples/blob/5.1.1-post/microservices-orders/docker-compose.yml#L182-L215
+#  kafka_setup:
+#    container_name: kafka_setup
+#    image: confluentinc/cp-kafka:6.2.0
+##    hostname: kafka_setup
+#    depends_on:
+#      - zookeeper
+#      - kafka_broker
+#    command: "bash -c 'echo Waiting for Kafka to be ready... && \
+#                       cub kafka-ready -b kafka_broker:9092 1 20 && \
+#                       kafka-topics --create --if-not-exists --zookeeper zookeeper:2181 --partitions 1 --replication-factor 1 --topic live_incidents'"
+#    environment:
+#      # The following settings are listed here only to satisfy the image's requirements.
+#      # We override the image's `command` anyways, hence this container will not start a broker.
+#      KAFKA_BROKER_ID: ignored
+#      KAFKA_ZOOKEEPER_CONNECT: ignored
+##    networks:
+##      - kafka_net
+#    logging:
+#      driver: "awslogs"
+#      options:
+#        awslogs-region: "us-east-2"
 
   rss_scraper:
+    container_name: rss_scraper
+    image: 901235749806.dkr.ecr.us-east-2.amazonaws.com/911mapr/rss_scraper
     depends_on:
       - db
     networks:
       - db_net
-    build:
-      context: ./rss_scraper
-    restart:
-      always
+#    build:
+#      context: ./rss_scraper
+#    restart:
+#      always
     environment:
       MYSQL_HOST:
       MYSQL_DATABASE:
       MYSQL_TABLE:
       MYSQL_USER:
       MYSQL_PASSWORD:
+#    logging:
+#      driver: "awslogs"
+#      options:
+#        awslogs-region: "us-east-2"
 
   kafka_producer:
-    build:
-      context: ./kafka_producer
+    container_name: kafka_producer
+    image: 901235749806.dkr.ecr.us-east-2.amazonaws.com/911mapr/kafka_producer
+#    build:
+#      context: ./kafka_producer
     depends_on:
       - db
       - zookeeper
       - kafka_broker
-      - kafka_setup
-    restart:
-      always
+#    restart:
+#      always
     networks:
       - db_net
       - kafka_net
@@ -104,26 +133,36 @@ services:
       MYSQL_TABLE:
       MYSQL_USER:
       MYSQL_PASSWORD:
+#    logging:
+#      driver: "awslogs"
+#      options:
+#        awslogs-region: "us-east-2"
 
   web_app:
-    build:
-      context: ./web_app
+    container_name: web_app
+    image: 901235749806.dkr.ecr.us-east-2.amazonaws.com/911mapr/web_app
+#    build:
+#      context: ./web_app
     depends_on:
       - db
       - rss_scraper
       - zookeeper
       - kafka_broker
-      - kafka_setup
       - kafka_producer
     ports:
-      - "80:5000"
+      - "5000:5000"
     networks:
       - kafka_net
-    restart:
-      always
+#    restart:
+#      always
+#    logging:
+#      driver: "awslogs"
+#      options:
+#        awslogs-region: "us-east-2"
 
 volumes:
   db_data: { }
+  kafka: { }
 
 networks:
   db_net:
