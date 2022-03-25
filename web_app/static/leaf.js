@@ -70,15 +70,15 @@ setTimeout(() => {
     console.log('starting live events listener');
     var source_live = new EventSource('/incidents/live');
     source_live.addEventListener('message', function (e) {
-        // console.log('got live event message:' + e);
-        // console.log('live event message data:' + e.data);
+        console.log('got live event message:' + e);
+        console.log('live event message data:' + e.data);
 
-        if (e.data === 'heartbeat') {
-            // console.log('got heartbeat');
+        let message_json_parsed = JSON.parse(e.data);
+        console.log('e.data json parsed:' + message_json_parsed);
 
+        if ('heartbeat' in message_json_parsed) {
+            console.log('got heartbeat');
         } else {
-            let message_json_parsed = JSON.parse(e.data);
-            // console.log('e.data json parsed:' + message_json_parsed);
             update_markers(message_json_parsed);
         }
     }, false);
@@ -115,16 +115,16 @@ function add_new_incident_to_map(new_inc) {
     // new incident ID, make new marker
     let new_incident_marker = {
         id: new_inc.id,
-        title: new_inc.title,
-        published_ts: new_inc.published_timestamp,
+        type: new_inc.type,
+        addr: new_inc.addr,
+        ts: new_inc.ts,
         lat: new_inc.lat,
         lon: new_inc.lon,
         status: []
     };
 
     let status_obj = {
-        db_index: new_inc.db_index,
-        db_ts: new_inc.db_timestamp,
+        ts: new_inc.ts,
         type: new_inc.status
     };
     new_incident_marker.status.unshift(status_obj);  // add status to incident
@@ -189,8 +189,7 @@ function update_marker(existing_marker_index, new_inc) {
     console.log('updating marker with index=' + existing_marker_index);
 
     let status_obj = {
-        db_index: new_inc.db_index,
-        db_ts: new_inc.db_timestamp,
+        ts: new_inc.ts,
         type: new_inc.status
     };
     mapMarkers[existing_marker_index].status.unshift(status_obj);
@@ -212,14 +211,14 @@ function new_incident_from_json(json_record) {
     console.log(json_record);
 
     const incident = {
-        db_index: json_record[0],
-        db_timestamp: json_record[1],
-        title: json_record[2],
-        published_timestamp: json_record[3],
-        id: String(json_record[5]).toUpperCase(),
-        status: String(json_record[6]).toUpperCase(),
-        lat: json_record[7],
-        lon: json_record[8]
+        addr: json_record["addr"],
+        agency: json_record["agency"],
+        id: json_record["id"],
+        lat: json_record["lat"],
+        lon: json_record["lon"],
+        status: json_record["status"],
+        ts: json_record["ts"],
+        type: json_record["type"],
     };
 
     console.log('returning incident:');
