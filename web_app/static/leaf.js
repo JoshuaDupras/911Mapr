@@ -39,26 +39,28 @@ fetch(`/getdata/${index}`)
     });
 
 // TODO: implement last <hours/days> fetch, don't hardcode date/time
-fetch_hours = 3
-fetch(`/incidents/past/hours/${fetch_hours}`)
+fetch_hours = 3;
+fetch(`/incidents/init`)
     .then(response => response.json())
     .then(response => {
         // console.log('since response text:');
         // console.log(response);
 
-        console.log('Loaded ' + response.length + ' incident records from the past ' + fetch_hours + ' hours')
+        console.log('Loaded ' + response.length + ' incident records from the past ' + fetch_hours + ' hours');
+
+        console.log('response stringified:' + JSON.stringify(response));
+
+        // parsed_response = JSON.parse(response)
+        // console.log('parsed_response:' + parsed_response)
 
         for (const message of response) {
             console.log('single message:' + message);
 
-            let json_message = '{' + String(message) + '}';
-            console.log('single message in json format:' + json_message);
+            let message_json_stringified = JSON.stringify(message);
+            console.log('message json stringified:' + message_json_stringified);
 
-            let message_json_parsed = JSON.parse(json_message);
-            console.log('json parsed message:' + message_json_parsed);
-
-            let json_message_data = message_json_parsed.data;
-            console.log('json_message_data' + json_message_data);
+            let json_message_data = message.data;
+            console.log('message_data' + json_message_data);
 
             update_markers(json_message_data);
         }
@@ -143,7 +145,7 @@ function add_new_incident_to_map(new_inc) {
     console.log('added incident with marker to mapMarkers.');
 
     if (num_markers > max_num_markers) {
-        console.log('reached maximum number of markers (' + max_num_markers + '), removing the earliest.')
+        console.log('reached maximum number of markers (' + max_num_markers + '), removing the earliest.');
         map.removeLayer(mapMarkers[(max_num_markers - 1)]);
         mapMarkers.pop();
     }
@@ -370,7 +372,7 @@ function zoom_to_inc(index) {
 var inc_lg_counter = 0;
 
 function add_incident_to_sidebar_list(inc_indx) {
-    console.log('adding incident to sidebar list with index = ' + inc_indx)
+    console.log('adding incident to sidebar list with index = ' + inc_indx);
     let target_el_query = "incident_list_content";
     document.getElementById(target_el_query).innerHTML = generate_lg_html(inc_indx) + document.getElementById(target_el_query).innerHTML;
 }

@@ -5,14 +5,13 @@ import time
 from datetime import datetime, timedelta
 from os import environ
 
-import redis.exceptions
-from redis import Redis
-
 from flask import Flask, render_template, request, jsonify, Response
+from redis import Redis
 
 logging.basicConfig(level=logging.INFO, format='{asctime} | {levelname:^8} | {name}.{lineno} : {message}', style='{')
 
 app = Flask(__name__)
+app.secret_key = 'A}-Phdik}}0|vgS]ie2r>rv1l/)Ilb'
 
 stream_key = environ.get("STREAM", "S:ROC")
 
@@ -63,90 +62,90 @@ def data_get(index_no):
         return 't_in = %s ; result: %s ;' % (index_no, data[int(index_no)])
 
 
-# @app.route('/incidents/range/<time_range_str_start>_<time_range_str_end>', methods=['GET'])
-# def get_time_range(time_range_str_start, time_range_str_end):
-#     request_start_ts = time.time()
-#     start_dt = process_time_range_str(time_range_str_start)
-#     end_dt = process_time_range_str(time_range_str_end)
-#     messages = consume_time_range(start_dt, end_dt)
-#     app.logger.info(f'retrieved {len(messages)} messages in {time.time() - request_start_ts} seconds')
-#     return jsonify(messages)
+@app.route('/incidents/range/<time_range_str_start>_<time_range_str_end>', methods=['GET'])
+def get_time_range(time_range_str_start, time_range_str_end):
+    request_start_ts = time.time()
+    start_dt = process_time_range_str(time_range_str_start)
+    end_dt = process_time_range_str(time_range_str_end)
+    messages = consume_time_range(start_dt, end_dt)
+    app.logger.info(f'retrieved {len(messages)} messages in {time.time() - request_start_ts} seconds')
+    return jsonify(messages)
 
 
-# @app.route('/incidents/since/<time_range_str>', methods=['GET'])
-# def get_since(time_range_str):
-#     app.logger.info(f'retrieving incidents that occurred after {time_range_str}')
-#     request_start_ts = time.time()
-#     start_dt = process_time_range_str(time_range_str)
-#     end_dt = datetime.now()
-#     messages = consume_time_range(start_dt, end_dt)
-#     app.logger.info(f'retrieved {len(messages)} messages in {time.time() - request_start_ts} seconds')
-#     return jsonify(messages)
+@app.route('/incidents/since/<time_range_str>', methods=['GET'])
+def get_since(time_range_str):
+    app.logger.info(f'retrieving incidents that occurred after {time_range_str}')
+    request_start_ts = time.time()
+    start_dt = process_time_range_str(time_range_str)
+    end_dt = datetime.now()
+    messages = consume_time_range(start_dt, end_dt)
+    app.logger.info(f'retrieved {len(messages)} messages in {time.time() - request_start_ts} seconds')
+    return jsonify(messages)
 
 
-# @app.route('/incidents/past/hours/<hours>', methods=['GET'])
-# def past_hours(hours):
-#     app.logger.info(f'retrieving incidents from the last {hours} hours')
-#     request_start_ts = time.time()
-#     start_dt = datetime.now() - timedelta(hours=int(hours))
-#     end_dt = datetime.now()
-#     messages = consume_time_range(start_dt, end_dt)
-#     app.logger.info(f'retrieved {len(messages)} messages in {time.time() - request_start_ts} seconds')
-#     return jsonify(messages)
-#
-#
-# @app.route('/incidents/past/days/<days>', methods=['GET'])
-# def past_days(days):
-#     app.logger.info(f'retrieving incidents from the last {days} days')
-#     past_hours(int(days) * 24)
+@app.route('/incidents/init', methods=['GET'])
+def initial_fetch():
+    fetch_hours = 3
+    json_msgs, live_start_id = past_hours(fetch_hours)
+    app.logger.info(f'init fetch complete - live_start_id={live_start_id}')
+    return json_msgs
+
+
+@app.route('/incidents/past/hours/<hours>', methods=['GET'])
+def past_hours(hours):
+    app.logger.info(f'retrieving incidents from the last {hours} hours')
+    request_start_ts = time.time()
+    start_dt = datetime.now() - timedelta(hours=int(hours))
+    end_dt = datetime.now()
+    messages, last_id_consumed = consume_time_range(start_dt, end_dt)
+    app.logger.info(f'retrieved {len(messages)} messages in {time.time() - request_start_ts} seconds')
+    return jsonify(messages), last_id_consumed
+
+
+@app.route('/incidents/past/days/<days>', methods=['GET'])
+def past_days(days):
+    app.logger.info(f'retrieving incidents from the last {days} days')
+    json_msgs, last_id = past_hours(int(days) * 24)
+    return json_msgs
 
 
 def now_ms():
     return time.time() * 1000
 
 
-# def consume_time_range(start_dt, end_dt):
-#     func_start_ts = time.time()
-#     start_ms = start_dt.timestamp() * 1000
-#     end_ms = end_dt.timestamp() * 1000
-#     app.logger.info(f"consuming from time range: date_start_ms={start_ms}, date_end_ms={end_ms}")
-#     app.logger.info(f'current time = {datetime.now().ctime()}')
-#
-#     c = get_consumer()  # doesn't do any consuming, only metadata
-#     tp = TopicPartition(incidents_topic, partition_num)  # partition n. 0
-#
-#     start_offset = offsets_for_times(c, [tp], start_ms)[tp]
-#     app.logger.info(f'start offsets={start_offset}')
-#     end_offset = offsets_for_times(c, [tp], end_ms)[tp] - 1
-#     app.logger.info(f'end offsets={end_offset}')
-#     app.logger.info(f'start offsets={start_offset}, end offsets={end_offset}')
-#
-#     if start_offset == end_offset:
-#         return []
-#
-#     c.seek(tp, start_offset)
-#
-#     app.logger.info(f'consuming between offsets {start_offset} and {end_offset}')
-#     msg_list = []
-#     msg_index = -1
-#     for msg in c:
-#         app.logger.info(f'got msg with offset={msg.offset}')
-#         if msg.offset >= end_offset:
-#             app.logger.info(f'msg offset ({msg.offset}) is greater or equal to end offset ({end_offset}), breaking...')
-#             break
-#         msg_index += 1
-#         app.logger.info(f'msg_index={msg_index}, msg_offset={msg.offset}, msg_value={msg.value}')
-#         decoded_msg = msg.value.decode()
-#         app.logger.info('msg decoded')
-#         msg_list.append('"data":{0}'.format(decoded_msg))
-#         app.logger.info('msg appended to msg_list')
-#     app.logger.info(f'consumed {len(msg_list)} messages between "{start_dt.ctime()}" and "{end_dt.ctime()} in '
-#                     f'{time.time() - func_start_ts} seconds"')
-#
-#     app.logger.info('closing consumer')
-#     c.close()
-#     app.logger.info('consumer closed. returning msg_list..')
-#     return msg_list
+def consume_time_range(start_dt, end_dt):
+    func_start_ts = time.time()
+    start_ms = int(start_dt.timestamp() * 1000)
+    end_ms = int(end_dt.timestamp() * 1000)
+    app.logger.info(f"consuming from time range: date_start_ms={start_ms}, date_end_ms={end_ms}")
+    app.logger.info(f'current time = {datetime.now().ctime()}')
+
+    r = connect_to_redis()
+    stream_info = r.xinfo_stream(name=stream_key)
+    app.logger.info(f'stream_info={stream_info}')
+    last_id = stream_info['last-generated-id']
+    app.logger.info(f'last ID = {last_id}')
+
+    records = r.xrange(name=stream_key, min=f'{start_ms}-0', max=f'{end_ms}-0')
+    app.logger.info(f'xrange from {start_ms} to {end_ms} - records={records}')
+
+    msg_list = []
+    last_id = None
+    for record in records:
+        app.logger.info(f'got record={record}')
+
+        last_id, msg_data = record
+        app.logger.info(f"REDIS ID: {last_id}")
+        app.logger.info(f"DATA = {msg_data}")
+
+        msg_dict = {'data': msg_data}
+        msg_list.append(msg_dict)
+        app.logger.info('record appended to msg_list')
+    app.logger.info(f'read {len(msg_list)} records between "{start_dt.ctime()}" and "{end_dt.ctime()} in '
+                    f'{time.time() - func_start_ts} seconds"')
+
+    r.close()
+    return msg_list, last_id
 
 
 def process_time_range_str(time_range_str):
@@ -179,7 +178,7 @@ def incident_stream():
     ignore_list = ['keepalive']  # TODO: re-enable
 
     def events():
-        app.logger.info('starting kafka live consumer loop')
+        app.logger.info('starting live xread loop')
         last_msg_ts = None
         poll_delay_s = 5  # TODO: drop this to 0.5 in prod
         heartbeat_cadence_s = 30  # TODO: this could probably be 30 or more
@@ -188,6 +187,9 @@ def incident_stream():
 
         stream_info = r.xinfo_stream(name=stream_key)
         app.logger.info(f'stream_info={stream_info}')
+
+        # TODO: use last ID from init request as start of live eventStream, so we don't miss any incidents in between
+
         last_id = stream_info['last-generated-id']
         app.logger.info(f'last ID = {last_id}')
 
@@ -226,6 +228,7 @@ def incident_stream():
 
             app.logger.info('bottom of while True loop')
 
+    r.close()
     return Response(events(), mimetype="text/event-stream")
 
 
