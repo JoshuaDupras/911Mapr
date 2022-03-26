@@ -11,7 +11,6 @@ from redis import Redis
 logging.basicConfig(level=logging.INFO, format='{asctime} | {levelname:^8} | {name}.{lineno} : {message}', style='{')
 
 app = Flask(__name__)
-app.secret_key = 'A}-Phdik}}0|vgS]ie2r>rv1l/)Ilb'
 
 stream_key = environ.get("STREAM", "S:ROC")
 
