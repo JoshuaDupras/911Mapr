@@ -29,9 +29,7 @@ exec: true     # Enable running commands in your container.
 # Optional fields for more advanced use-cases.
 #
 variables:                    # Pass environment variables as key value pairs.
-  KAFKA_HOST: kafka-broker.${COPILOT_ENVIRONMENT_NAME}.${COPILOT_APPLICATION_NAME}.local
-  KAFKA_PORT: 29092
-  KAFKA_TOPIC: 'live_incidents'
+  REDIS_HOST: redis.${COPILOT_ENVIRONMENT_NAME}.${COPILOT_APPLICATION_NAME}.local
 
 #secrets:                      # Pass secrets from AWS Systems Manager (SSM) Parameter Store.
 #  GITHUB_TOKEN: GITHUB_TOKEN  # The key is the name of the environment variable, the value is the name of the SSM parameter.

@@ -22,14 +22,10 @@ exec: true     # Enable running commands in your container.
 #
 variables: # Pass environment variables as key value pairs.
   LOG_LEVEL: info
-  MYSQL_HOST: db.${COPILOT_ENVIRONMENT_NAME}.${COPILOT_APPLICATION_NAME}.local
+  REDIS_HOST: redis.${COPILOT_ENVIRONMENT_NAME}.${COPILOT_APPLICATION_NAME}.local
 
 secrets: # Pass secrets from AWS Systems Manager (SSM) Parameter Store.
-  MYSQL_PORT: '/copilot/${COPILOT_APPLICATION_NAME}/${COPILOT_ENVIRONMENT_NAME}/secrets/MYSQL_PORT'
-  MYSQL_DATABASE: '/copilot/${COPILOT_APPLICATION_NAME}/${COPILOT_ENVIRONMENT_NAME}/secrets/MYSQL_DATABASE'
-  MYSQL_TABLE: '/copilot/${COPILOT_APPLICATION_NAME}/${COPILOT_ENVIRONMENT_NAME}/secrets/MYSQL_TABLE'
-  MYSQL_USER: '/copilot/${COPILOT_APPLICATION_NAME}/${COPILOT_ENVIRONMENT_NAME}/secrets/MYSQL_USER'
-  MYSQL_PASSWORD: '/copilot/${COPILOT_APPLICATION_NAME}/${COPILOT_ENVIRONMENT_NAME}/secrets/MYSQL_PASSWORD'
+  REDIS_PASSWORD: '/copilot/${COPILOT_APPLICATION_NAME}/${COPILOT_ENVIRONMENT_NAME}/secrets/REDIS_PASSWORD'
 
 # You can override any of the values defined above by environment.
 #environments:
