@@ -1,29 +1,26 @@
+import json
 import logging
 import re
 import time
 from datetime import datetime, timedelta
+from os import environ
 
 from flask import Flask, render_template, request, jsonify, Response
-from kafka import KafkaConsumer, TopicPartition
+from redis import Redis
 
 logging.basicConfig(level=logging.INFO, format='{asctime} | {levelname:^8} | {name}.{lineno} : {message}', style='{')
 
 app = Flask(__name__)
 
-incidents_topic = 'live_incidents'
-kafka_server = 'kafka_broker:29092'
-partition_num = 0
+stream_key = environ.get("STREAM", "S:ROC")
 
 
-def get_consumer():
-    app.logger.info(f'Creating Kafka Consumer and connecting to broker...')
-    consumer = KafkaConsumer(incidents_topic,
-                             bootstrap_servers=kafka_server,
-                             enable_auto_commit=True,  # TODO:test this on/off
-                             # value_deserializer = lambda m: json.loads(m.decode('utf-8'))  # TODO: inline deserialization
-                             )
-    app.logger.info(f'Kafka Consumer connected to Broker')
-    return consumer
+def connect_to_redis():
+    return Redis(host=environ.get("REDIS_HOSTNAME", "localhost"),
+                 port=environ.get("REDIS_PORT", 6379),
+                 password=environ.get("REDIS_PASSWORD"),
+                 retry_on_timeout=True,
+                 decode_responses=True)
 
 
 @app.route('/')
@@ -85,21 +82,30 @@ def get_since(time_range_str):
     return jsonify(messages)
 
 
+@app.route('/incidents/init', methods=['GET'])
+def initial_fetch():
+    fetch_hours = 3
+    json_msgs, live_start_id = past_hours(fetch_hours)
+    app.logger.info(f'init fetch complete - live_start_id={live_start_id}')
+    return json_msgs
+
+
 @app.route('/incidents/past/hours/<hours>', methods=['GET'])
 def past_hours(hours):
     app.logger.info(f'retrieving incidents from the last {hours} hours')
     request_start_ts = time.time()
     start_dt = datetime.now() - timedelta(hours=int(hours))
     end_dt = datetime.now()
-    messages = consume_time_range(start_dt, end_dt)
+    messages, last_id_consumed = consume_time_range(start_dt, end_dt)
     app.logger.info(f'retrieved {len(messages)} messages in {time.time() - request_start_ts} seconds')
-    return jsonify(messages)
+    return jsonify(messages), last_id_consumed
 
 
 @app.route('/incidents/past/days/<days>', methods=['GET'])
 def past_days(days):
     app.logger.info(f'retrieving incidents from the last {days} days')
-    past_hours(int(days) * 24)
+    json_msgs, last_id = past_hours(int(days) * 24)
+    return json_msgs
 
 
 def now_ms():
@@ -108,78 +114,37 @@ def now_ms():
 
 def consume_time_range(start_dt, end_dt):
     func_start_ts = time.time()
-    start_ms = start_dt.timestamp() * 1000
-    end_ms = end_dt.timestamp() * 1000
+    start_ms = int(start_dt.timestamp() * 1000)
+    end_ms = int(end_dt.timestamp() * 1000)
     app.logger.info(f"consuming from time range: date_start_ms={start_ms}, date_end_ms={end_ms}")
     app.logger.info(f'current time = {datetime.now().ctime()}')
 
-    c = get_consumer()  # doesn't do any consuming, only metadata
-    tp = TopicPartition(incidents_topic, partition_num)  # partition n. 0
+    r = connect_to_redis()
+    stream_info = r.xinfo_stream(name=stream_key)
+    app.logger.info(f'stream_info={stream_info}')
+    last_id = stream_info['last-generated-id']
+    app.logger.info(f'last ID = {last_id}')
 
-    start_offset = offsets_for_times(c, [tp], start_ms)[tp]
-    app.logger.info(f'start offsets={start_offset}')
-    end_offset = offsets_for_times(c, [tp], end_ms)[tp] - 1
-    app.logger.info(f'end offsets={end_offset}')
-    app.logger.info(f'start offsets={start_offset}, end offsets={end_offset}')
+    records = r.xrange(name=stream_key, min=f'{start_ms}-0', max=f'{end_ms}-0')
+    app.logger.info(f'xrange from {start_ms} to {end_ms} - records={records}')
 
-    if start_offset == end_offset:
-        return []
-
-    c.seek(tp, start_offset)
-
-    app.logger.info(f'consuming between offsets {start_offset} and {end_offset}')
     msg_list = []
-    msg_index = -1
-    for msg in c:
-        app.logger.info(f'got msg with offset={msg.offset}')
-        if msg.offset >= end_offset:
-            app.logger.info(f'msg offset ({msg.offset}) is greater or equal to end offset ({end_offset}), breaking...')
-            break
-        msg_index += 1
-        app.logger.info(f'msg_index={msg_index}, msg_offset={msg.offset}, msg_value={msg.value}')
-        decoded_msg = msg.value.decode()
-        app.logger.info('msg decoded')
-        msg_list.append('"data":{0}'.format(decoded_msg))
-        app.logger.info('msg appended to msg_list')
-    app.logger.info(f'consumed {len(msg_list)} messages between "{start_dt.ctime()}" and "{end_dt.ctime()} in '
+    last_id = None
+    for record in records:
+        app.logger.info(f'got record={record}')
+
+        last_id, msg_data = record
+        app.logger.info(f"REDIS ID: {last_id}")
+        app.logger.info(f"DATA = {msg_data}")
+
+        msg_dict = {'data': msg_data}
+        msg_list.append(msg_dict)
+        app.logger.info('record appended to msg_list')
+    app.logger.info(f'read {len(msg_list)} records between "{start_dt.ctime()}" and "{end_dt.ctime()} in '
                     f'{time.time() - func_start_ts} seconds"')
 
-    app.logger.info('closing consumer')
-    c.close()
-    app.logger.info('consumer closed. returning msg_list..')
-    return msg_list
-
-
-def offsets_for_times(consumer, partitions, timestamp_ms):
-    """Augment KafkaConsumer.offsets_for_times to not return None
-
-    Parameters
-    ----------
-    consumer : kafka.KafkaConsumer
-        This consumer must only be used for collecting metadata, and not
-        consuming. API's will be used that invalidate consuming.
-    partitions : list of kafka.TopicPartition
-    timestamp_ms : number
-        Timestamp, in seconds since unix epoch, to return offsets for.
-
-    Returns
-    -------
-    dict from kafka.TopicPartition to integer offset
-    """
-    # Kafka uses millisecond timestamps
-    response = consumer.offsets_for_times({p: timestamp_ms for p in partitions})
-    offsets = {}
-    for tp, offset_and_timestamp in response.items():
-        if offset_and_timestamp is None:
-            app.logger.warning(f'offset_and_timestamp is None, timestamp_ms={timestamp_ms}')
-            # No messages exist after timestamp. Fetch latest offset.
-            # consumer.assign([tp])
-            consumer.seek_to_end(tp)
-            offsets[tp] = consumer.position(tp)
-        else:
-            offsets[tp] = offset_and_timestamp.offset
-    app.logger.info(f'getting offsets: timestamp_ms={timestamp_ms}, offsets={offsets}')
-    return offsets
+    r.close()
+    return msg_list, last_id
 
 
 def process_time_range_str(time_range_str):
@@ -207,59 +172,62 @@ def incident_stream():
         app.logger.warning('live event stream disabled by flask backend')
         return 'disabled'
 
-    consumer = get_consumer()
-    tp = TopicPartition(incidents_topic, partition_num)  # partition n. 0
-
-    # consumer.seek_to_end(tp)
+    r = connect_to_redis()
 
     ignore_list = ['keepalive']  # TODO: re-enable
 
-    # ignore_list = None  # TODO: remove debug list
-
     def events():
-        app.logger.info('starting kafka live consumer loop')
+        app.logger.info('starting live xread loop')
         last_msg_ts = None
         poll_delay_s = 5  # TODO: drop this to 0.5 in prod
         heartbeat_cadence_s = 30  # TODO: this could probably be 30 or more
 
         last_msg_ts = None
+
+        stream_info = r.xinfo_stream(name=stream_key)
+        app.logger.info(f'stream_info={stream_info}')
+
+        # TODO: use last ID from init request as start of live eventStream, so we don't miss any incidents in between
+
+        last_id = stream_info['last-generated-id']
+        app.logger.info(f'last ID = {last_id}')
+
         while True:
             app.logger.info(f'top of while True loop, delaying consumer poll by {poll_delay_s} seconds')
             time.sleep(poll_delay_s)
 
-            poll_response = consumer.poll()
-            if poll_response == {}:
-                pass
-            else:
-                # consumed a record, let's make sure it's valid
-                app.logger.info(f'poll_response={poll_response}')
+            resp_list = r.xread(streams={stream_key: last_id}, count=1, block=5000)
 
-                record = poll_response[tp][0]
-                app.logger.info(f'record={record}')
+            app.logger.info(f'read from redis with ID={last_id} - response of length {len(resp_list)}="{resp_list}"')
 
-                msg = record.value.decode()
-                app.logger.info(f'msg={msg}')
+            if resp_list:
+                resp_0 = resp_list[0]
+                app.logger.info(f'resp = "{resp_0}"')
 
-                if msg in ignore_list:
-                    app.logger.warning(f'ignoring msg={msg}')
-                else:
-                    #  got a valid message, yield it
-                    offset = record.offset
-                    app.logger.info(f'offset={offset}')
+                key, messages = resp_0
+                last_id, data = messages[0]
+                app.logger.info(f"REDIS ID: {last_id}")
+                app.logger.info(f"DATA = {data}")
 
-                    response = 'data:{0}\n\n'.format(msg)
-                    app.logger.info(f'yielding response = {response}')
-                    yield response
-                    last_msg_ts = time.time()
-                    continue
+                # json_data = jsonify(data)
+                # app.logger.info(json_data)
+
+                data = json.dumps(data)
+                yield_this = 'data:{0}\n\n'.format(data)
+                app.logger.info(f'yielding:"{yield_this}"')
+
+                yield yield_this
+                last_msg_ts = time.time()
+                continue
 
             if last_msg_ts is None or time.time() - last_msg_ts > heartbeat_cadence_s:
                 app.logger.info(f'heartbeat cadence exceeded ({heartbeat_cadence_s} seconds) - yielding heartbeat')
-                yield 'data:{0}\n\n'.format('heartbeat')
+                yield f'data:{{"heartbeat": "{round(time.time())}"}}\n\n'
                 last_msg_ts = time.time()
 
             app.logger.info('bottom of while True loop')
 
+    r.close()
     return Response(events(), mimetype="text/event-stream")
 
 

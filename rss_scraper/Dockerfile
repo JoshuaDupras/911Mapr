@@ -5,5 +5,5 @@ COPY . .
 
 RUN pip install -r requirements.txt
 
-CMD ["python", "-u", "rss_to_mysql.py"]
+CMD ["python", "-u", "rss_to_redis.py"]
 

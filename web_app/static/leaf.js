@@ -39,26 +39,28 @@ fetch(`/getdata/${index}`)
     });
 
 // TODO: implement last <hours/days> fetch, don't hardcode date/time
-fetch_hours = 3
-fetch(`/incidents/past/hours/${fetch_hours}`)
+fetch_hours = 3;
+fetch(`/incidents/init`)
     .then(response => response.json())
     .then(response => {
         // console.log('since response text:');
         // console.log(response);
 
-        console.log('Loaded ' + response.length + ' incident records from the past ' + fetch_hours + ' hours')
+        console.log('Loaded ' + response.length + ' incident records from the past ' + fetch_hours + ' hours');
+
+        console.log('response stringified:' + JSON.stringify(response));
+
+        // parsed_response = JSON.parse(response)
+        // console.log('parsed_response:' + parsed_response)
 
         for (const message of response) {
             console.log('single message:' + message);
 
-            let json_message = '{' + String(message) + '}';
-            console.log('single message in json format:' + json_message);
+            let message_json_stringified = JSON.stringify(message);
+            console.log('message json stringified:' + message_json_stringified);
 
-            let message_json_parsed = JSON.parse(json_message);
-            console.log('json parsed message:' + message_json_parsed);
-
-            let json_message_data = message_json_parsed.data;
-            console.log('json_message_data' + json_message_data);
+            let json_message_data = message.data;
+            console.log('message_data' + json_message_data);
 
             update_markers(json_message_data);
         }
@@ -70,15 +72,15 @@ setTimeout(() => {
     console.log('starting live events listener');
     var source_live = new EventSource('/incidents/live');
     source_live.addEventListener('message', function (e) {
-        // console.log('got live event message:' + e);
-        // console.log('live event message data:' + e.data);
+        console.log('got live event message:' + e);
+        console.log('live event message data:' + e.data);
 
-        if (e.data === 'heartbeat') {
-            // console.log('got heartbeat');
+        let message_json_parsed = JSON.parse(e.data);
+        console.log('e.data json parsed:' + message_json_parsed);
 
+        if ('heartbeat' in message_json_parsed) {
+            console.log('got heartbeat');
         } else {
-            let message_json_parsed = JSON.parse(e.data);
-            // console.log('e.data json parsed:' + message_json_parsed);
             update_markers(message_json_parsed);
         }
     }, false);
@@ -115,16 +117,16 @@ function add_new_incident_to_map(new_inc) {
     // new incident ID, make new marker
     let new_incident_marker = {
         id: new_inc.id,
-        title: new_inc.title,
-        published_ts: new_inc.published_timestamp,
+        type: new_inc.type,
+        addr: new_inc.addr,
+        ts: new_inc.ts,
         lat: new_inc.lat,
         lon: new_inc.lon,
         status: []
     };
 
     let status_obj = {
-        db_index: new_inc.db_index,
-        db_ts: new_inc.db_timestamp,
+        ts: new_inc.ts,
         type: new_inc.status
     };
     new_incident_marker.status.unshift(status_obj);  // add status to incident
@@ -143,7 +145,7 @@ function add_new_incident_to_map(new_inc) {
     console.log('added incident with marker to mapMarkers.');
 
     if (num_markers > max_num_markers) {
-        console.log('reached maximum number of markers (' + max_num_markers + '), removing the earliest.')
+        console.log('reached maximum number of markers (' + max_num_markers + '), removing the earliest.');
         map.removeLayer(mapMarkers[(max_num_markers - 1)]);
         mapMarkers.pop();
     }
@@ -189,8 +191,7 @@ function update_marker(existing_marker_index, new_inc) {
     console.log('updating marker with index=' + existing_marker_index);
 
     let status_obj = {
-        db_index: new_inc.db_index,
-        db_ts: new_inc.db_timestamp,
+        ts: new_inc.ts,
         type: new_inc.status
     };
     mapMarkers[existing_marker_index].status.unshift(status_obj);
@@ -212,14 +213,14 @@ function new_incident_from_json(json_record) {
     console.log(json_record);
 
     const incident = {
-        db_index: json_record[0],
-        db_timestamp: json_record[1],
-        title: json_record[2],
-        published_timestamp: json_record[3],
-        id: String(json_record[5]).toUpperCase(),
-        status: String(json_record[6]).toUpperCase(),
-        lat: json_record[7],
-        lon: json_record[8]
+        addr: json_record["addr"],
+        agency: json_record["agency"],
+        id: json_record["id"],
+        lat: json_record["lat"],
+        lon: json_record["lon"],
+        status: json_record["status"],
+        ts: json_record["ts"],
+        type: json_record["type"],
     };
 
     console.log('returning incident:');
@@ -371,7 +372,7 @@ function zoom_to_inc(index) {
 var inc_lg_counter = 0;
 
 function add_incident_to_sidebar_list(inc_indx) {
-    console.log('adding incident to sidebar list with index = ' + inc_indx)
+    console.log('adding incident to sidebar list with index = ' + inc_indx);
     let target_el_query = "incident_list_content";
     document.getElementById(target_el_query).innerHTML = generate_lg_html(inc_indx) + document.getElementById(target_el_query).innerHTML;
 }
