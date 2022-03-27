@@ -1,0 +1,37 @@
+name: Deploy Master on AWS with Copilot
+
+# Controls when the workflow will run
+on:
+#  push:
+#    branches:
+#      - master
+#    paths-ignore:
+#      - 'README.md'
+#      - '.github/**'
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  copilot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install copilot
+        run: |
+          mkdir -p $GITHUB_WORKSPACE/bin
+          # download copilot
+          curl -Lo copilot-linux https://github.com/aws/copilot-cli/releases/download/v1.8.3/copilot-linux && \
+          # make copilot bin executable
+          chmod +x copilot-linux && \
+          # move to path
+          mv copilot-linux $GITHUB_WORKSPACE/bin/copilot && \
+          # add to PATH
+          echo "$GITHUB_WORKSPACE/bin" >> $GITHUB_PATH
+
+      # sample use
+      - run: copilot help
+
+      - name: Checkout Latest Repo
+        uses: actions/checkout@master
+        
+      - run: aws configure
