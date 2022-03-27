@@ -20,6 +20,9 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AWS_DEFAULT_REGION: us-east-2
     steps:
+      - name: Checkout Latest Repo
+        uses: actions/checkout@master
+
       - name: Install copilot
         run: |
           mkdir -p $GITHUB_WORKSPACE/bin
@@ -34,9 +37,5 @@ jobs:
 
       # sample use
       - run: copilot help
-
-      - name: Checkout Latest Repo
-        uses: actions/checkout@master
-          
       - run: copilot app ls
       - run: copilot app show
