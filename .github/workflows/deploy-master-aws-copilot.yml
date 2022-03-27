@@ -35,8 +35,10 @@ jobs:
           # add to PATH
           echo "$GITHUB_WORKSPACE/bin" >> $GITHUB_PATH
 
+      - name: test aws cli installation
+        run: aws help
+
       - name: test aws cli credentials
-        working-directory: ./copilot
         run: aws iam get-user
 
       - name: list copilot directory
