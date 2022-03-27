@@ -35,3 +35,10 @@ secrets: # Pass secrets from AWS Systems Manager (SSM) Parameter Store.
 #environments:
 #  test:
 #    count: 2               # Number of tasks to run for the "test" environment.
+
+storage:
+  volumes:
+    db_volume:
+      efs: true
+      path: /data
+      read_only: false
