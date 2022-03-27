@@ -35,7 +35,14 @@ jobs:
           # add to PATH
           echo "$GITHUB_WORKSPACE/bin" >> $GITHUB_PATH
 
-      # sample use
-      - run: copilot help
-      - run: copilot app ls
-      - run: copilot app show
+      - name: list copilot directory
+        working-directory: ./copilot
+        run: ls -lha
+
+      - name: copilot help
+        working-directory: ./copilot
+        run: copilot help
+
+      - name: copilot app init
+        working-directory: ./copilot
+        run: copilot app init
