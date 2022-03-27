@@ -16,7 +16,7 @@ delay_sec = 10
 
 
 def connect_to_redis():
-    return Redis(host=environ.get("REDIS_HOSTNAME", "localhost"),
+    return Redis(host=environ.get("REDIS_HOST", "localhost"),
                  port=environ.get("REDIS_PORT", 6379),
                  password=environ.get("REDIS_PASSWORD"),
                  retry_on_timeout=True,
@@ -218,5 +218,5 @@ def main():
 
 
 if __name__ == '__main__':
-    print(f'{ctime_now()}: starting rss_to_mysql.py')
+    print(f'{ctime_now()}: starting rss_to_redis.py')
     main()

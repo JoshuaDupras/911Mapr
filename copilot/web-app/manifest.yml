@@ -31,8 +31,8 @@ exec: true     # Enable running commands in your container.
 variables:                    # Pass environment variables as key value pairs.
   REDIS_HOST: redis.${COPILOT_ENVIRONMENT_NAME}.${COPILOT_APPLICATION_NAME}.local
 
-#secrets:                      # Pass secrets from AWS Systems Manager (SSM) Parameter Store.
-#  GITHUB_TOKEN: GITHUB_TOKEN  # The key is the name of the environment variable, the value is the name of the SSM parameter.
+secrets: # Pass secrets from AWS Systems Manager (SSM) Parameter Store.
+  REDIS_PASSWORD: '/copilot/${COPILOT_APPLICATION_NAME}/${COPILOT_ENVIRONMENT_NAME}/secrets/REDIS_PASSWORD'
 
 # You can override any of the values defined above by environment.
 #environments:

@@ -16,7 +16,7 @@ stream_key = environ.get("STREAM", "S:ROC")
 
 
 def connect_to_redis():
-    return Redis(host=environ.get("REDIS_HOSTNAME", "localhost"),
+    return Redis(host=environ.get("REDIS_HOST", "localhost"),
                  port=environ.get("REDIS_PORT", 6379),
                  password=environ.get("REDIS_PASSWORD"),
                  retry_on_timeout=True,
