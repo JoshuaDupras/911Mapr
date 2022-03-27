@@ -35,13 +35,9 @@ jobs:
           # add to PATH
           echo "$GITHUB_WORKSPACE/bin" >> $GITHUB_PATH
 
-      - name: configure AWS CLI profile
+      - name: test aws cli credentials
         working-directory: ./copilot
-        run: aws configure --profile default
-
-      - name: configure AWS CLI region
-        working-directory: ./copilot
-        run: aws configure region $AWS_DEFAULT_REGION
+        run: aws iam get-user
 
       - name: list copilot directory
         working-directory: ./copilot
