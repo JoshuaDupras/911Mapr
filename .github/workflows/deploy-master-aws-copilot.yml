@@ -56,7 +56,7 @@ jobs:
 
       - name: copilot env init
         working-directory: ./copilot
-        run: copilot env init --name test-env --default-config --profile default
+        run: copilot env init --app incidentmapr --name test-env
 
       - name: init redis container
         working-directory: ./copilot
