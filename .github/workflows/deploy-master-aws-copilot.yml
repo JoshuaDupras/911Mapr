@@ -19,6 +19,7 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AWS_DEFAULT_REGION: 'us-east-2'
+      REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
     steps:
       - name: Checkout Latest Repo
         uses: actions/checkout@master
@@ -57,21 +58,17 @@ jobs:
         working-directory: ./copilot
         run: copilot app init
 
-      - name: copilot env init
-        working-directory: ./copilot
-        run: copilot env init --name test-env --default-config --profile default
-
       - name: init redis container
         working-directory: ./copilot
-        run: copilot init --app incidentmapr --name redis --dockerfile ../redis/Dockerfile --type "Backend Service" --deploy
+        run: copilot svc deploy --app incidentmapr --env test --name redis
 
       - name: init rss_scraper container
         working-directory: ./copilot
-        run: copilot init --app incidentmapr --name rss_scraper --dockerfile ../rss_scraper/Dockerfile --type "Backend Service" --deploy
+        run: copilot svc deploy --app incidentmapr --env test --name rss_scraper
 
-      - name: init redis container
+      - name: init web_app container
         working-directory: ./copilot
-        run: copilot init --app incidentmapr --name web_app --dockerfile ../web_app/Dockerfile --type "Load Balanced Web Service" --port 80 --deploy
+        run: copilot svc deploy --app incidentmapr --env test --name web_app
 
       - name: copilot show services
         working-directory: ./copilot
