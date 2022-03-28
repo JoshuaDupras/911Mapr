@@ -42,6 +42,9 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-2
 
+      - name: Configure AWS profile
+        run: aws configure set region us-east-2 --profile default
+
       - name: list copilot directory
         working-directory: ./copilot
         run: ls -lha
@@ -56,7 +59,7 @@ jobs:
 
       - name: copilot env init
         working-directory: ./copilot
-        run: copilot env init --app incidentmapr --name test-env
+        run: copilot env init --name test-env --default-config --profile default
 
       - name: init redis container
         working-directory: ./copilot
