@@ -47,33 +47,25 @@ jobs:
         run: aws configure set region us-east-2 --profile default
 
       - name: list copilot directory
-        working-directory: ./copilot
         run: ls -lha
 
       - name: copilot help
-        working-directory: ./copilot
         run: copilot help
 
       - name: copilot app init
-        working-directory: ./copilot
         run: copilot app init
 
       - name: init redis container
-        working-directory: ./copilot
-        run: copilot init --app incidentmapr --name redis --dockerfile ../redis/Dockerfile --type "Backend Service" --deploy
+        run: copilot init --app incidentmapr --name redis --dockerfile ./redis/Dockerfile --type "Backend Service" --deploy
 
       - name: init rss_scraper container
-        working-directory: ./copilot
-        run: copilot init --app incidentmapr --name rss_scraper --dockerfile ../rss_scraper/Dockerfile --type "Backend Service" --deploy
+        run: copilot init --app incidentmapr --name rss_scraper --dockerfile ./rss_scraper/Dockerfile --type "Backend Service" --deploy
 
       - name: init web_app container
-        working-directory: ./copilot
-        run: copilot init --app incidentmapr --name web_app --dockerfile ../web_app/Dockerfile --type "Load Balanced Web Service" --port 80 --deploy
+        run: copilot init --app incidentmapr --name web_app --dockerfile ./web_app/Dockerfile --type "Load Balanced Web Service" --port 80 --deploy
 
       - name: copilot show services
-        working-directory: ./copilot
         run: copilot svc ls
 
       - name: copilot show web_app service
-        working-directory: ./copilot
         run: copilot svc show --name web_app
