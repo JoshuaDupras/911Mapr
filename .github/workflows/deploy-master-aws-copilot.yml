@@ -46,8 +46,17 @@ jobs:
       - name: Configure AWS profile
         run: aws configure set region us-east-2 --profile default
 
-      - name: list directory
-        run: ls -lha
+      - name: list directories
+        run: |
+          ls -lha
+          ls -lha /redis
+          ls -lha /rss_scraper
+          ls -lha /web_app
+          cd $GITHUB_WORKSPACE
+          ls -lha
+          ls -lha /redis
+          ls -lha /rss_scraper
+          ls -lha /web_app
 
       - name: copilot help
         run: copilot help
