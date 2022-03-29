@@ -76,5 +76,5 @@ jobs:
       - name: copilot show services
         run: copilot svc ls
 
-      - name: copilot show web_app service
-        run: copilot svc show --name web_app
+      - name: copilot show web-app service
+        run: copilot svc show --name web-app
