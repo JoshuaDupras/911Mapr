@@ -12,7 +12,7 @@ type: Backend Service
 image:
   # Docker build arguments. For additional overrides: https://aws.github.io/copilot-cli/docs/manifest/backend-service/#image-build
   build:
-    dockerfile: redis\Dockerfile
+    dockerfile: ./redis/Dockerfile
     args:
       REDIS_PASSWORD: ${REDIS_PASSWORD}  # host running the copilot deploy command must load this, not loaded by secret
   # Port exposed through your container to route traffic to it.
