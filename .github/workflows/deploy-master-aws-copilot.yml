@@ -68,10 +68,10 @@ jobs:
         run: copilot deploy --app incidentmapr --env test --name redis
 
       - name: init rss_scraper container
-        run: copilot deploy --app incidentmapr --env test --name rss_scraper
+        run: copilot deploy --app incidentmapr --env test --name rss-scraper
 
       - name: init web_app container
-        run: copilot deploy --app incidentmapr --env test --name web_app
+        run: copilot deploy --app incidentmapr --env test --name web-app
 
       - name: copilot show services
         run: copilot svc ls
