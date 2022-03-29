@@ -49,14 +49,14 @@ jobs:
       - name: list directories
         run: |
           ls -lha
-          ls -lha /redis
-          ls -lha /rss_scraper
-          ls -lha /web_app
+          ls -lha ./redis
+          ls -lha ./rss_scraper
+          ls -lha ./web_app
           cd $GITHUB_WORKSPACE
           ls -lha
-          ls -lha /redis
-          ls -lha /rss_scraper
-          ls -lha /web_app
+          ls -lha ./redis
+          ls -lha ./rss_scraper
+          ls -lha ./web_app
 
       - name: copilot help
         run: copilot help
@@ -65,13 +65,13 @@ jobs:
         run: copilot app init
 
       - name: init redis container
-        run: copilot init --app incidentmapr --name redis --dockerfile $GITHUB_WORKSPACE/redis/Dockerfile --type "Backend Service" --deploy
+        run: copilot init --app incidentmapr --name redis --dockerfile ./redis/Dockerfile --type "Backend Service" --deploy
 
       - name: init rss_scraper container
-        run: copilot init --app incidentmapr --name rss_scraper --dockerfile $GITHUB_WORKSPACE/rss_scraper/Dockerfile --type "Backend Service" --deploy
+        run: copilot init --app incidentmapr --name rss_scraper --dockerfile ./rss_scraper/Dockerfile --type "Backend Service" --deploy
 
       - name: init web_app container
-        run: copilot init --app incidentmapr --name web_app --dockerfile $GITHUB_WORKSPACE/web_app/Dockerfile --type "Load Balanced Web Service" --port 80 --deploy
+        run: copilot init --app incidentmapr --name web_app --dockerfile ./web_app/Dockerfile --type "Load Balanced Web Service" --port 80 --deploy
 
       - name: copilot show services
         run: copilot svc ls
