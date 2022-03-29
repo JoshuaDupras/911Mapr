@@ -65,13 +65,13 @@ jobs:
         run: copilot app init
 
       - name: init redis container
-        run: copilot init --app incidentmapr --name redis --dockerfile ./redis/Dockerfile --type "Backend Service" --deploy
+        run: copilot deploy --app incidentmapr --env test --name redis
 
       - name: init rss_scraper container
-        run: copilot init --app incidentmapr --name rss_scraper --dockerfile ./rss_scraper/Dockerfile --type "Backend Service" --deploy
+        run: copilot deploy --app incidentmapr --env test --name rss_scraper
 
       - name: init web_app container
-        run: copilot init --app incidentmapr --name web_app --dockerfile ./web_app/Dockerfile --type "Load Balanced Web Service" --port 80 --deploy
+        run: copilot deploy --app incidentmapr --env test --name web_app
 
       - name: copilot show services
         run: copilot svc ls
