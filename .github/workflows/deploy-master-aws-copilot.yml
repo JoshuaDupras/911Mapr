@@ -28,7 +28,7 @@ jobs:
         run: |
           mkdir -p $GITHUB_WORKSPACE/bin
           # download copilot
-          curl -Lo copilot-linux https://github.com/aws/copilot-cli/releases/download/v1.8.3/copilot-linux && \
+          curl -Lo copilot-linux https://github.com/aws/copilot-cli/releases/download/v1.15.0/copilot-linux && \
           # make copilot bin executable
           chmod +x copilot-linux && \
           # move to path
