@@ -62,7 +62,7 @@ jobs:
         run: copilot help
 
       - name: copilot app init
-        run: copilot app init
+        run: copilot app init --domain 911mapr.com
 
       - name: init redis container
         run: copilot deploy --app incidentmapr --env test --name redis
