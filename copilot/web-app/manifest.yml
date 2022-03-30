@@ -11,19 +11,7 @@ http:
   path: '/'
   healthcheck:
     path: '/_healthcheck'
-    success_codes: '200,301'
-    healthy_threshold: 3
-    unhealthy_threshold: 2
-    interval: 15s
-    timeout: 10s
-    grace_period: 45s
-  deregistration_delay: 5s
-  stickiness: false
-  allowed_source_ips: ["10.24.34.0/23"]
-  alias: 911mapr.com
-
-nlb:
-  port: 443/tls
+    success_codes: '200'
 
 # Configuration for your containers and service.
 image:
