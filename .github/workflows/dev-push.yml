@@ -2,12 +2,12 @@ name: Dev-Push
 
 # Controls when the workflow will run
 on:
-#  push:
-#    branches:
-#      - dev
-#    paths-ignore:
-#      - 'README.md'
-#      - '.github/**'
+  #  push:
+  #    branches:
+  #      - dev
+  #    paths-ignore:
+  #      - 'README.md'
+  #      - '.github/**'
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -16,19 +16,28 @@ on:
   workflow_call:
 
 jobs:
-  dev_push:
-    name: Dev Push Workflow
+  discord_notifcation_dev_push_start:
+    needs: [ deploy_dev_to_test, run_lighthouse_on_test ]
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Latest Repo
-        uses: actions/checkout@master
+      - name: Discord notification - Deploy Successful
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        uses: Ilshidur/action-discord@master
+        with:
+          args: 'dev-push workflow started for project {{ EVENT_PAYLOAD.repository.full_name }}.'
 
-      - name: Deploy Dev Branch to Test Environment
-        uses: ./.github/workflows/deploy-dev-to-test.yml
+  deploy_dev_to_test:
+    uses: ./.github/workflows/deploy-dev-to-test.yml
 
-      - name: Run lighthouse test on Test Environment
-        uses: ./.github/workflows/run-lighthouse-on-test.yml
+  run_lighthouse_on_test:
+    needs: [ deploy_dev_to_test ]
+    uses: ./.github/workflows/run-lighthouse-on-test.yml
 
+  discord_notifcation_deploy_succcessful:
+    needs: [ deploy_dev_to_test, run_lighthouse_on_test ]
+    runs-on: ubuntu-latest
+    steps:
       - name: Discord notification - Deploy Successful
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
@@ -40,12 +49,20 @@ jobs:
         run: sleep 10m
         shell: bash
 
-      - name: Delete test environment
-        uses: ./.github/workflows/delete-test-env.yml
+  delete_test_environment:
+    needs: [ deploy_dev_to_test, run_lighthouse_on_test, discord_notifcation_deploy_succcessful ]
+    if: ${{ always() }}
+    uses: ./.github/workflows/delete-test-env.yml
 
+  discord_notifcation_destroy_done:
+    needs: delete_test_environment
+    runs-on: ubuntu-latest
+    steps:
       - name: Discord notification - Destroy Successful
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         uses: Ilshidur/action-discord@master
         with:
           args: 'The project {{ EVENT_PAYLOAD.repository.full_name }} has been deleted from the TEST environment after 10 minutes.'
+
+  # TODO: send discord notification on failure
