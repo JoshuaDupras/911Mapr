@@ -17,7 +17,6 @@ on:
 
 jobs:
   discord_notifcation_dev_push_start:
-    needs: [ deploy_dev_to_test, run_lighthouse_on_test ]
     runs-on: ubuntu-latest
     steps:
       - name: Discord notification - Deploy Successful
