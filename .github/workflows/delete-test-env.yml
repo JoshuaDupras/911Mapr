@@ -17,7 +17,13 @@ on:
 
   # Allows this workflow to be run from another workflow
   workflow_call:
-
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: True
+      AWS_SECRET_ACCESS_KEY:
+        required: True
+      REDIS_PASSWORD:
+        required: True
 
 jobs:
   delete_test_env:

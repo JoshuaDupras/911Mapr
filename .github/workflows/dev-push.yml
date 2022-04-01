@@ -28,6 +28,10 @@ jobs:
 
   deploy_dev_to_test:
     uses: ./.github/workflows/deploy-dev-to-test.yml
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
 
   run_lighthouse_on_test:
     needs: [ deploy_dev_to_test ]
@@ -52,6 +56,10 @@ jobs:
     needs: [ deploy_dev_to_test, run_lighthouse_on_test, discord_notifcation_deploy_succcessful ]
     if: ${{ always() }}
     uses: ./.github/workflows/delete-test-env.yml
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
 
   discord_notifcation_destroy_done:
     needs: delete_test_environment
