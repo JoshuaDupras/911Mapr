@@ -1,4 +1,6 @@
-name: Deploy Master on AWS with Copilot
+name: Deploy-Master-to-Prod
+
+concurrency: prod
 
 # Controls when the workflow will run
 on:
@@ -62,16 +64,16 @@ jobs:
         run: copilot help
 
       - name: copilot app init
-        run: copilot app init --domain 911mapr.com
+        run: copilot app init
 
       - name: init redis container
-        run: copilot deploy --app incidentmapr --env test --name redis
+        run: copilot deploy --app incidentmapr --prod test --name redis
 
       - name: init rss_scraper container
-        run: copilot deploy --app incidentmapr --env test --name rss-scraper
+        run: copilot deploy --app incidentmapr --env prod --name rss-scraper
 
       - name: init web_app container
-        run: copilot deploy --app incidentmapr --env test --name web-app
+        run: copilot deploy --app incidentmapr --env prod --name web-app
 
       - name: copilot show services
         run: copilot svc ls
