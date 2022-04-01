@@ -28,7 +28,7 @@ jobs:
         with:
           urls: 'https://test.911mapr.com/'
           budgetPath: '.github/lighthouse/budget.json'
-          configPath: '.github/lighthouse/lighthouserc-assertions.json'
+          configPath: '.github/lighthouse/lighthouserc.json'
 
       # TODO: send notification to dev
 
