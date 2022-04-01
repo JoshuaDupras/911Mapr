@@ -244,4 +244,4 @@ if __name__ == '__main__':
     # TODO: switch to production webserver
     app.logger.info('starting flask app')
     app.debug = True
-    app.run(threaded=True, host='0.0.0.0')
+    app.run(threaded=True, host='0.0.0.0', port=80)
