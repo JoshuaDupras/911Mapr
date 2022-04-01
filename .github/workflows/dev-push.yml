@@ -20,6 +20,9 @@ jobs:
     name: Dev Push Workflow
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout Latest Repo
+        uses: actions/checkout@master
+
       - name: Deploy Dev Branch to Test Environment
         uses: ./.github/workflows/deploy-dev-to-test.yml
 
