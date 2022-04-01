@@ -1,4 +1,4 @@
-name: Deploy-Dev-to-Test
+name: Run-Lighthouse-on-Test
 
 concurrency: test
 
