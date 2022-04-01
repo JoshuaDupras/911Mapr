@@ -1,0 +1,85 @@
+name: Deploy-Dev-to-Test
+
+concurrency: test
+
+# Controls when the workflow will run
+on:
+#  push:
+#    branches:
+#      - dev
+#    paths-ignore:
+#      - 'README.md'
+#      - '.github/**'
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  copilot:
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: 'us-east-2'
+      REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+    steps:
+      - name: Checkout Latest Repo
+        uses: actions/checkout@master
+
+      - name: Install copilot
+        run: |
+          mkdir -p $GITHUB_WORKSPACE/bin
+          # download copilot
+          curl -Lo copilot-linux https://github.com/aws/copilot-cli/releases/download/v1.15.0/copilot-linux && \
+          # make copilot bin executable
+          chmod +x copilot-linux && \
+          # move to path
+          mv copilot-linux $GITHUB_WORKSPACE/bin/copilot && \
+          # add to PATH
+          echo "$GITHUB_WORKSPACE/bin" >> $GITHUB_PATH
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-2
+
+      - name: Configure AWS profile
+        run: aws configure set region us-east-2 --profile default
+
+      - name: list directories
+        run: |
+          ls -lha
+          ls -lha ./redis
+          ls -lha ./rss_scraper
+          ls -lha ./web_app
+          cd $GITHUB_WORKSPACE
+          ls -lha
+          ls -lha ./redis
+          ls -lha ./rss_scraper
+          ls -lha ./web_app
+
+      - name: copilot help
+        run: copilot help
+
+      - name: copilot app init
+        run: copilot app init
+
+      - name: copilot init test env
+        run: copilot env init --name test --profile default --app incidentmapr
+
+      - name: init redis container
+        run: copilot deploy --app incidentmapr --env test --name redis
+
+      - name: init rss_scraper container
+        run: copilot deploy --app incidentmapr --env test --name rss-scraper
+
+      - name: init web_app container
+        run: copilot deploy --app incidentmapr --env test --name web-app
+
+      - name: copilot show services
+        run: copilot svc ls
+
+      - name: copilot show web-app service
+        run: copilot svc show --name web-app
