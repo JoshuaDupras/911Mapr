@@ -19,6 +19,9 @@ jobs:
   lighthouse:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout Latest Repo
+        uses: actions/checkout@master
+
       # run tests?
       # https://github.com/sdras/awesome-actions
       # https://github.com/marketplace/actions/lighthouse-ci-action
