@@ -52,12 +52,14 @@ jobs:
       # delete test environment after some time has passed
       - name: copilot svc delete redis from test env
         run: copilot svc delete --name redis --env test --yes
+        continue-on-error: true
 
       - name: copilot svc delete rss_scraper from test env
-        run: copilot svc delete --name rss_scraper --env test --yes
+        run: copilot svc delete --name rss-scraper --env test --yes
+        continue-on-error: true
 
       - name: copilot svc delete web_app from test env
-        run: copilot svc delete --name web_app --env test --yes
+        run: copilot svc delete --name web-app --env test --yes
 
       # TODO: delete environment? this might remove load balancer, will also need to init env
 #      - name: copilot delete test env
