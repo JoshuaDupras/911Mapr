@@ -15,8 +15,12 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
+  # Allows this workflow to be run from another workflow
+  workflow_call:
+
+
 jobs:
-  copilot:
+  delete_test_env:
     runs-on: ubuntu-latest
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -60,7 +64,3 @@ jobs:
 
       - name: copilot svc delete web_app from test env
         run: copilot svc delete --name web-app --env test --yes
-
-      # TODO: delete environment? this might remove load balancer, will also need to init env
-#      - name: copilot delete test env
-#        run: copilot env delete --name test --app incidentmapr

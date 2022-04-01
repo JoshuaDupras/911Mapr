@@ -1,0 +1,48 @@
+name: Dev-Push
+
+# Controls when the workflow will run
+on:
+#  push:
+#    branches:
+#      - dev
+#    paths-ignore:
+#      - 'README.md'
+#      - '.github/**'
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+  # Allows this workflow to be run from another workflow
+  workflow_call:
+
+jobs:
+  dev_push:
+    name: Dev Push Workflow
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy Dev Branch to Test Environment
+        uses: ./.github/workflows/deploy-dev-to-test.yml
+
+      - name: Run lighthouse test on Test Environment
+        uses: ./.github/workflows/run-lighthouse-on-test.yml
+
+      - name: Discord notification - Deploy Successful
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        uses: Ilshidur/action-discord@master
+        with:
+          args: 'The project {{ EVENT_PAYLOAD.repository.full_name }} has been deployed to the TEST environment. It will be live for 10 minutes.'
+
+      - name: Sleep for 10 minutes
+        run: sleep 10m
+        shell: bash
+
+      - name: Delete test environment
+        uses: ./.github/workflows/delete-test-env.yml
+
+      - name: Discord notification - Destroy Successful
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        uses: Ilshidur/action-discord@master
+        with:
+          args: 'The project {{ EVENT_PAYLOAD.repository.full_name }} has been deleted from the TEST environment after 10 minutes.'
