@@ -76,9 +76,6 @@ jobs:
       - name: copilot app init
         run: copilot app init
 
-      - name: copilot init test env
-        run: copilot env init --name test --profile default --app incidentmapr
-
       - name: init redis container
         run: copilot deploy --app incidentmapr --env test --name redis
 
