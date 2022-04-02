@@ -26,7 +26,7 @@ on:
         required: True
 
 jobs:
-  delete_test_env:
+  undeploy_test_env:
     runs-on: ubuntu-latest
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -68,17 +68,17 @@ jobs:
           cat ./copilot/rss-scraper/manifest.yml
           cat ./copilot/web-app/manifest.yml
 
-#      - name: un-deploy redis container
-#        run: copilot deploy --app incidentmapr --env test --name redis
-#
-#      - name: un-deploy rss_scraper container
-#        run: copilot deploy --app incidentmapr --env test --name rss-scraper
-#
-#      - name: un-deploy web_app container
-#        run: copilot deploy --app incidentmapr --env test --name web-app
-#
-#      - name: copilot show services
-#        run: copilot svc ls
-#
-#      - name: copilot show web-app service
-#        run: copilot svc show --name web-app
+      - name: un-deploy redis container
+        run: copilot deploy --app incidentmapr --env test --name redis
+
+      - name: un-deploy rss_scraper container
+        run: copilot deploy --app incidentmapr --env test --name rss-scraper
+
+      - name: un-deploy web_app container
+        run: copilot deploy --app incidentmapr --env test --name web-app
+
+      - name: copilot show services
+        run: copilot svc ls
+
+      - name: copilot show web-app service
+        run: copilot svc show --name web-app
