@@ -26,6 +26,16 @@ on:
         required: True
 
 jobs:
+  discord_notifcation_undeploy_started:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Discord notification - Un-deploy Started
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        uses: Ilshidur/action-discord@master
+        with:
+          args: 'TEST-ENV un-deploy started on project {{ EVENT_PAYLOAD.repository.full_name }}'
+  
   undeploy_test_env:
     runs-on: ubuntu-latest
     env:
@@ -33,7 +43,7 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AWS_DEFAULT_REGION: 'us-east-2'
       REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
-    steps:
+    steps:     
       - name: Checkout Latest Repo
         uses: actions/checkout@master
 
@@ -82,3 +92,26 @@ jobs:
 
       - name: copilot show web-app service
         run: copilot svc show --name web-app
+
+  discord_notifcation_undeploy_done:
+    needs: undeploy_test_env
+    runs-on: ubuntu-latest
+    steps:
+      - name: Discord notification - Un-deploy Successful
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        uses: Ilshidur/action-discord@master
+        with:
+          args: 'TEST-ENV un-deploy SUCCESSFUL on project {{ EVENT_PAYLOAD.repository.full_name }}'
+
+  discord_notifcation_undeploy_failed:
+    needs: undeploy_test_env
+    runs-on: ubuntu-latest
+    if: always() && (needs.undeploy_test_env.result == 'failure')
+    steps:
+      - name: Discord notification - Un-deploy Failed
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        uses: Ilshidur/action-discord@master
+        with:
+          args: 'TEST-ENV un-deploy FAILED on project {{ EVENT_PAYLOAD.repository.full_name }}'

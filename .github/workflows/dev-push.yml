@@ -2,12 +2,12 @@ name: Dev-Push
 
 # Controls when the workflow will run
 on:
-  #  push:
-  #    branches:
-  #      - dev
-  #    paths-ignore:
-  #      - 'README.md'
-  #      - '.github/**'
+    push:
+      branches:
+        - dev
+      paths-ignore:
+        - 'README.md'
+        - '.github/**'
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -41,12 +41,12 @@ jobs:
     needs: [ deploy_dev_to_test, run_lighthouse_on_test ]
     runs-on: ubuntu-latest
     steps:
-      - name: Discord notification - Deploy Successful
+      - name: Discord notification - Waiting
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         uses: Ilshidur/action-discord@master
         with:
-          args: 'The project {{ EVENT_PAYLOAD.repository.full_name }} has been deployed to the TEST environment. It will be live for 10 minutes.'
+          args: 'Leaving TEST-ENV live for 10 minutes'
 
       - name: Sleep for 10 minutes
         run: sleep 10m
@@ -60,16 +60,3 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
-
-  discord_notifcation_destroy_done:
-    needs: undeploy_test_environment
-    runs-on: ubuntu-latest
-    steps:
-      - name: Discord notification - Destroy Successful
-        env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-        uses: Ilshidur/action-discord@master
-        with:
-          args: 'The project {{ EVENT_PAYLOAD.repository.full_name }} has been deleted from the TEST environment after 10 minutes.'
-
-  # TODO: send discord notification on failure
