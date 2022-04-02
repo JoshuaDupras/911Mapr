@@ -231,15 +231,6 @@ def incident_stream():
     return Response(events(), mimetype="text/event-stream")
 
 
-@app.route('/printtest')
-def printMsg():
-    app.logger.error(f'{request.remote_addr}:testing error log')
-    app.logger.warning(f'{request.remote_addr}:testing warning log')
-    app.logger.error(f'{request.remote_addr}:testing error log')
-    app.logger.info(f'{request.remote_addr}:testing info log')
-    return "printtest complete -> Check backend log"
-
-
 if __name__ == '__main__':
     # TODO: switch to production webserver
     app.logger.info('starting flask app')
