@@ -1,4 +1,4 @@
-name: Delete-Test-Env
+name: Undeploy-Test-Env
 
 concurrency: test
 
@@ -59,14 +59,24 @@ jobs:
       - name: Configure AWS profile
         run: aws configure set region us-east-2 --profile default
 
-      # delete test environment after some time has passed
-      - name: copilot svc delete redis from test env
-        run: copilot svc delete --name redis --env test --yes
-        continue-on-error: true
+      - name: Set test-env count to 0
+        run: |
+          sed -i "s/count:\t\d/count: 0/" ./copilot/web-app/manifest.yml
+          sed -i "s/count:\t\d/count: 0/" ./copilot/web-app/manifest.yml
+          sed -i "s/count:\t\d/count: 0/" ./copilot/web-app/manifest.yml
+        shell: bash
 
-      - name: copilot svc delete rss_scraper from test env
-        run: copilot svc delete --name rss-scraper --env test --yes
-        continue-on-error: true
+      - name: un-deploy redis container
+        run: copilot deploy --app incidentmapr --env test --name redis
 
-      - name: copilot svc delete web_app from test env
-        run: copilot svc delete --name web-app --env test --yes
+      - name: un-deploy rss_scraper container
+        run: copilot deploy --app incidentmapr --env test --name rss-scraper
+
+      - name: un-deploy web_app container
+        run: copilot deploy --app incidentmapr --env test --name web-app
+
+      - name: copilot show services
+        run: copilot svc ls
+
+      - name: copilot show web-app service
+        run: copilot svc show --name web-app
