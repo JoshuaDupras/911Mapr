@@ -61,9 +61,9 @@ jobs:
 
       - name: Set test-env count to 0
         run: |
-          sed -i "s/count:\t\d/count: 0/" ./copilot/redis/manifest.yml
-          sed -i "s/count:\t\d/count: 0/" ./copilot/rss-scraper/manifest.yml
-          sed -i "s/count:\t\d/count: 0/" ./copilot/web-app/manifest.yml
+          sed -i -r "s/count:\t\d/count: 0/" ./copilot/redis/manifest.yml
+          sed -i -r "s/count:\t\d/count: 0/" ./copilot/rss-scraper/manifest.yml
+          sed -i -r "s/count:\t\d/count: 0/" ./copilot/web-app/manifest.yml
           cat ./copilot/redis/manifest.yml
           cat ./copilot/rss-scraper/manifest.yml
           cat ./copilot/web-app/manifest.yml
