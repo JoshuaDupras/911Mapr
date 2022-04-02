@@ -61,22 +61,24 @@ jobs:
 
       - name: Set test-env count to 0
         run: |
+          sed -i "s/count:\t\d/count: 0/" ./copilot/redis/manifest.yml
+          sed -i "s/count:\t\d/count: 0/" ./copilot/rss-scraper/manifest.yml
           sed -i "s/count:\t\d/count: 0/" ./copilot/web-app/manifest.yml
-          sed -i "s/count:\t\d/count: 0/" ./copilot/web-app/manifest.yml
-          sed -i "s/count:\t\d/count: 0/" ./copilot/web-app/manifest.yml
-        shell: bash
+          cat ./copilot/redis/manifest.yml
+          cat ./copilot/rss-scraper/manifest.yml
+          cat ./copilot/web-app/manifest.yml
 
-      - name: un-deploy redis container
-        run: copilot deploy --app incidentmapr --env test --name redis
-
-      - name: un-deploy rss_scraper container
-        run: copilot deploy --app incidentmapr --env test --name rss-scraper
-
-      - name: un-deploy web_app container
-        run: copilot deploy --app incidentmapr --env test --name web-app
-
-      - name: copilot show services
-        run: copilot svc ls
-
-      - name: copilot show web-app service
-        run: copilot svc show --name web-app
+#      - name: un-deploy redis container
+#        run: copilot deploy --app incidentmapr --env test --name redis
+#
+#      - name: un-deploy rss_scraper container
+#        run: copilot deploy --app incidentmapr --env test --name rss-scraper
+#
+#      - name: un-deploy web_app container
+#        run: copilot deploy --app incidentmapr --env test --name web-app
+#
+#      - name: copilot show services
+#        run: copilot svc ls
+#
+#      - name: copilot show web-app service
+#        run: copilot svc show --name web-app
