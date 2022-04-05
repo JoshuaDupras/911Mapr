@@ -22,7 +22,7 @@ on:
         required: True
 
 jobs:
-  discord_notifcation_lighthouse_started:
+  discord_notification_lighthouse_started:
     runs-on: ubuntu-latest
     steps:
       - name: Discord notification - lighthouse Started
@@ -51,7 +51,7 @@ jobs:
 
       # TODO: send notification to dev
 
-  discord_notifcation_lighthouse_done:
+  discord_notification_lighthouse_done:
     needs: lighthouse
     runs-on: ubuntu-latest
     steps:
@@ -62,7 +62,7 @@ jobs:
         with:
           args: 'TEST-ENV lighthouse test SUCCESSFUL on project {{ EVENT_PAYLOAD.repository.full_name }}'
 
-  discord_notifcation_lighthouse_failed:
+  discord_notification_lighthouse_failed:
     needs: lighthouse
     runs-on: ubuntu-latest
     if: always() && (needs.lighthouse.result == 'failure')

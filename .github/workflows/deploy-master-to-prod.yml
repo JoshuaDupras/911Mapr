@@ -4,12 +4,12 @@ concurrency: prod
 
 # Controls when the workflow will run
 on:
-#  push:
-#    branches:
-#      - master
-#    paths-ignore:
-#      - 'README.md'
-#      - '.github/**'
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - 'README.md'
+      - '.github/**'
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
