@@ -135,12 +135,14 @@ def rss_to_redis():
             hash_name = f'{location_str}:{inc_id}'
             scraped_dt_utc = datetime.utcnow()
 
-            if published_dt_utc > scraped_dt_utc:
-                # published datetime should never be past scraped time (now)
-                # if this happens, use scraped time
-                best_dt_utc = scraped_dt_utc
-            else:
-                best_dt_utc = published_dt_utc
+            # if published_dt_utc > scraped_dt_utc:
+            #     # published datetime should never be past scraped time (now)
+            #     # if this happens, use scraped time
+            #     best_dt_utc = scraped_dt_utc
+            # else:
+            #     best_dt_utc = published_dt_utc
+
+            best_dt_utc = scraped_dt_utc
 
             # TODO: 1 hash with multiple statuses show the same 'published time', might want to use scraped time?
 

@@ -259,7 +259,7 @@ function get_popup_html(marker) {
     return '<h2 style="text-align: center;"><span style="color: #000000;"><strong>' + marker.type + '</strong></span></h2>\n' +
         '<h3 style="text-align: center;"><span style="color: #323232;">' + marker.addr + '</span></h3>\n' +
         '<h2 style="text-align: center;">&nbsp;</h2>\n' +
-        '<h4 style="text-align: center;"><span style="color: #2f1e1e;">' + convert_ts_to_est(marker.ts) + '</span></h4>\n';
+        '<h4 style="text-align: center;"><span style="color: #2f1e1e;">' + convert_ts_to_est(marker.status.at(-1).ts) + '</span></h4>\n';
 }
 
 function convert_ts_to_est(ts) {
@@ -367,7 +367,7 @@ function get_sidebar_lg_html(inc_indx) {
     let heading = inc.type + ' at ' + inc.addr;
     let cent = inc.id;
     let sml = inc.lat + ', ' + inc.lon;
-    let corn = convert_ts_to_est(inc.ts);
+    let corn = convert_ts_to_est(inc.status.at(-1).ts)
 
     return '<a class="list-group-item list-group-item-action flex-column align-items-start"\n' +
         'href="#" onclick="click_inc_in_list(' + inc_indx + ')" >\n' +
