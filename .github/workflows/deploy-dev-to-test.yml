@@ -23,6 +23,8 @@ on:
         required: True
       REDIS_PASSWORD:
         required: True
+      DISCORD_WEBHOOK:
+        required: True
 
 jobs:
   discord_notifcation_deploy_started:

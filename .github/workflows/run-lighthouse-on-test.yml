@@ -17,7 +17,9 @@ on:
 
   # Allows this workflow to be run from another workflow
   workflow_call:
-
+    secrets:
+      DISCORD_WEBHOOK:
+        required: True
 
 jobs:
   discord_notifcation_lighthouse_started:
