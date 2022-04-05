@@ -176,11 +176,17 @@ function add_marker_to_incident(inc) {
     //   color: '#3388ff'
     // }).addTo(map);
 
-    let marker_str = pretty_str_recurse_objects(inc, ['marker']);
+    let popup_str = get_popup_html(inc);
+
+    const popup_options =
+        {
+            'maxWidth': '500',
+            'className': 'custom_popup'
+        };
 
     console.log('adding marker with string:');
-    console.log(marker_str);
-    marker.bindPopup(marker_str);
+    console.log(popup_str);
+    marker.bindPopup(popup_str, popup_options);
 
     inc.marker = marker;
 
@@ -200,9 +206,9 @@ function update_marker(existing_marker_index, new_inc) {
     console.log(mapMarkers[existing_marker_index]);
 
     console.log('updating marker with string:');
-    let marker_str = pretty_str_recurse_objects(mapMarkers[existing_marker_index], ['marker']);
-    console.log(marker_str);
-    mapMarkers[existing_marker_index].marker.setPopupContent(marker_str);
+    let popup_str = get_popup_html(mapMarkers[existing_marker_index]);
+    console.log(popup_str);
+    mapMarkers[existing_marker_index].marker.setPopupContent(popup_str);
 }
 
 function new_incident_from_json(json_record) {
@@ -247,6 +253,13 @@ function pretty_str_recurse_objects(obj, stop_recurse_keys = [], tab_spacer = ''
         }
     }
     return str;
+}
+
+function get_popup_html(marker) {
+    return '<h2 style="text-align: center;"><span style="color: #000000;"><strong>' + marker.type + '</strong></span></h2>\n' +
+        '<h3 style="text-align: center;"><span style="color: #323232;">' + marker.addr + '</span></h3>\n' +
+        '<h2 style="text-align: center;">&nbsp;</h2>\n' +
+        '<h4 style="text-align: center;"><span style="color: #2f1e1e;">' + marker.ts + '</span></h4>\n';
 }
 
 var lc = L.control.locate({

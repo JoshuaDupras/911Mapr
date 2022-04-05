@@ -76,3 +76,9 @@ html, body, #map {
 .unmuted {
     color: var(--color-accent);
 }
+
+.custom_popup .leaflet-popup-tip,
+.custom_popup .leaflet-popup-content-wrapper {
+    background: rgba(255, 103, 0, 0.77);
+    border-color: #ff6900;
+}
