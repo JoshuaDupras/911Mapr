@@ -259,8 +259,26 @@ function get_popup_html(marker) {
     return '<h2 style="text-align: center;"><span style="color: #000000;"><strong>' + marker.type + '</strong></span></h2>\n' +
         '<h3 style="text-align: center;"><span style="color: #323232;">' + marker.addr + '</span></h3>\n' +
         '<h2 style="text-align: center;">&nbsp;</h2>\n' +
-        '<h4 style="text-align: center;"><span style="color: #2f1e1e;">' + marker.ts + '</span></h4>\n';
+        '<h4 style="text-align: center;"><span style="color: #2f1e1e;">' + convert_ts_to_est(marker.ts) + '</span></h4>\n';
 }
+
+function convert_ts_to_est(ts) {
+    //    example of incoming ts = "2022-04-05 04:13:00"
+
+    // convert to ISO 8601 format
+    let split_ts = ts.split(" ");
+    const utc_date = split_ts[0] + 'T' + split_ts[1] + 'Z'
+
+    let date = new Date(utc_date)
+    let local_date_str = date.toLocaleString()
+
+    local_date_str = local_date_str.replace('T', ' ')
+    local_date_str = local_date_str.replace('Z', ' ')
+
+    return local_date_str
+
+}
+//{"ts": "2022-04-05 04:13:00", "id": "ROCE2209500025", "status": "WAITING", "type": "MVA / NO INJURIES", "addr": "W RIDGE RD/RIDGEWAY AVE ROC", "agency": "ROC", "lat": "+43.1944", "lon": "-77.6267"}
 
 var lc = L.control.locate({
     position: 'bottomright',
@@ -342,14 +360,14 @@ function incTable_addRow(published, title, id) {
 var sidebar = L.control.sidebar('sidebar').addTo(map);
 map.addControl(sidebar);
 
-function generate_lg_html(inc_indx) {
+function get_sidebar_lg_html(inc_indx) {
     let inc = mapMarkers[inc_indx];
     console.log('generating html for sidebar incident list. inc index=' + inc_indx);
 
     let heading = inc.type + ' at ' + inc.addr;
     let cent = inc.id;
     let sml = inc.lat + ', ' + inc.lon;
-    let corn = inc.ts;
+    let corn = convert_ts_to_est(inc.ts);
 
     return '<a class="list-group-item list-group-item-action flex-column align-items-start"\n' +
         'href="#" onclick="click_inc_in_list(' + inc_indx + ')" >\n' +
@@ -387,7 +405,7 @@ var inc_lg_counter = 0;
 function add_incident_to_sidebar_list(inc_indx) {
     console.log('adding incident to sidebar list with index = ' + inc_indx);
     let target_el_query = "incident_list_content";
-    document.getElementById(target_el_query).innerHTML = generate_lg_html(inc_indx) + document.getElementById(target_el_query).innerHTML;
+    document.getElementById(target_el_query).innerHTML = get_sidebar_lg_html(inc_indx) + document.getElementById(target_el_query).innerHTML;
 }
 
 start_ms = Date.now();
