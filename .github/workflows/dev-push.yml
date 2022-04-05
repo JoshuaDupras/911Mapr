@@ -16,7 +16,7 @@ on:
   workflow_call:
 
 jobs:
-  discord_notifcation_dev_push_start:
+  discord_notification_dev_push_start:
     runs-on: ubuntu-latest
     steps:
       - name: Discord notification - Deploy Successful
@@ -40,7 +40,7 @@ jobs:
     secrets:
       DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
 
-  discord_notifcation_deploy_succcessful:
+  discord_notification_deploy_succcessful:
     needs: [ deploy_dev_to_test, run_lighthouse_on_test ]
     runs-on: ubuntu-latest
     steps:
@@ -56,7 +56,7 @@ jobs:
         shell: bash
 
   undeploy_test_environment:
-    needs: [ deploy_dev_to_test, run_lighthouse_on_test, discord_notifcation_deploy_succcessful ]
+    needs: [ deploy_dev_to_test, run_lighthouse_on_test, discord_notification_deploy_succcessful ]
     if: ${{ always() }}
     uses: ./.github/workflows/undeploy-test-env.yml
     secrets:

@@ -27,7 +27,7 @@ on:
         required: True
 
 jobs:
-  discord_notifcation_deploy_started:
+  discord_notification_deploy_started:
     runs-on: ubuntu-latest
     steps:
       - name: Discord notification - Deploy Started
@@ -103,7 +103,7 @@ jobs:
       - name: copilot show web-app service
         run: copilot svc show --name web-app
 
-  discord_notifcation_deploy_done:
+  discord_notification_deploy_done:
     needs: deploy_dev_to_test_env
     runs-on: ubuntu-latest
     steps:
@@ -114,7 +114,7 @@ jobs:
         with:
           args: 'TEST-ENV deploy SUCCESSFUL on project {{ EVENT_PAYLOAD.repository.full_name }}'
 
-  discord_notifcation_deploy_failed:
+  discord_notification_deploy_failed:
     needs: deploy_dev_to_test_env
     runs-on: ubuntu-latest
     if: always() && (needs.deploy_dev_to_test_env.result == 'failure')

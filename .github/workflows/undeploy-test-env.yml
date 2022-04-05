@@ -28,7 +28,7 @@ on:
         required: True
 
 jobs:
-  discord_notifcation_undeploy_started:
+  discord_notification_undeploy_started:
     runs-on: ubuntu-latest
     steps:
       - name: Discord notification - Un-deploy Started
@@ -95,7 +95,7 @@ jobs:
       - name: copilot show web-app service
         run: copilot svc show --name web-app
 
-  discord_notifcation_undeploy_done:
+  discord_notification_undeploy_done:
     needs: undeploy_test_env
     runs-on: ubuntu-latest
     steps:
@@ -106,7 +106,7 @@ jobs:
         with:
           args: 'TEST-ENV un-deploy SUCCESSFUL on project {{ EVENT_PAYLOAD.repository.full_name }}'
 
-  discord_notifcation_undeploy_failed:
+  discord_notification_undeploy_failed:
     needs: undeploy_test_env
     runs-on: ubuntu-latest
     if: always() && (needs.undeploy_test_env.result == 'failure')
