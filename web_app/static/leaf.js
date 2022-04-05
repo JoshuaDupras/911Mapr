@@ -333,10 +333,10 @@ function generate_lg_html(inc_indx) {
     let inc = mapMarkers[inc_indx];
     console.log('generating html for sidebar incident list. inc index=' + inc_indx);
 
-    let heading = inc.title;
+    let heading = inc.type + ' at ' + inc.addr;
     let cent = inc.id;
     let sml = inc.lat + ', ' + inc.lon;
-    let corn = inc.published_ts;
+    let corn = inc.ts;
 
     return '<a class="list-group-item list-group-item-action flex-column align-items-start"\n' +
         'href="#" onclick="click_inc_in_list(' + inc_indx + ')" >\n' +
