@@ -180,7 +180,7 @@ function add_marker_to_incident(inc) {
 
     const popup_options =
         {
-            'maxWidth': '500',
+            'maxWidth': '250',
             'className': 'custom_popup'
         };
 
@@ -256,10 +256,10 @@ function pretty_str_recurse_objects(obj, stop_recurse_keys = [], tab_spacer = ''
 }
 
 function get_popup_html(marker) {
-    return '<h2 style="text-align: center;"><span style="color: #000000;"><strong>' + marker.type + '</strong></span></h2>\n' +
-        '<h3 style="text-align: center;"><span style="color: #323232;">' + marker.addr + '</span></h3>\n' +
-        '<h2 style="text-align: center;">&nbsp;</h2>\n' +
-        '<h4 style="text-align: center;"><span style="color: #2f1e1e;">' + convert_ts_to_est(marker.status.at(-1).ts) + '</span></h4>\n';
+    return '<h4 style="text-align: center;"><span style="color: #000000;"><strong>' + marker.type + '</strong></span></h4>\n' +
+        '<h5 style="text-align: center;"><span style="color: #323232;">' + marker.addr + '</span></h5>\n' +
+        '<h5 style="text-align: center;">&nbsp;</h5>\n' +
+        '<h6 style="text-align: center;"><span style="color: #2f1e1e;">' + convert_ts_to_est(marker.status.at(-1).ts) + '</span></h6>\n';
 }
 
 function convert_ts_to_est(ts) {
