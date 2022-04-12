@@ -55,7 +55,7 @@ jobs:
           mv copilot-linux $GITHUB_WORKSPACE/bin/copilot && \
           # add to PATH
           echo "$GITHUB_WORKSPACE/bin" >> $GITHUB_PATH
-          apt install -y expect
+          sudo apt install -y expect
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
