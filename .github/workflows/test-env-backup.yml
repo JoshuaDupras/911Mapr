@@ -48,6 +48,18 @@ jobs:
       - name: Checkout Latest Repo
         uses: actions/checkout@master
 
+      - name: Install copilot
+        run: |
+          mkdir -p $GITHUB_WORKSPACE/bin
+          # download copilot
+          curl -Lo copilot-linux https://github.com/aws/copilot-cli/releases/download/v1.15.0/copilot-linux && \
+          # make copilot bin executable
+          chmod +x copilot-linux && \
+          # move to path
+          mv copilot-linux $GITHUB_WORKSPACE/bin/copilot && \
+          # add to PATH
+          echo "$GITHUB_WORKSPACE/bin" >> $GITHUB_PATH
+
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
