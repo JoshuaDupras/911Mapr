@@ -1,0 +1,100 @@
+name: test-env-backup
+
+concurrency: test
+
+# Controls when the workflow will run
+on:
+#  push:
+#    branches:
+#      - dev
+#    paths-ignore:
+#      - 'README.md'
+#      - '.github/**'
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+  # Allows this workflow to be run from another workflow
+  workflow_call:
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: True
+      AWS_SECRET_ACCESS_KEY:
+        required: True
+      BACKUP_BUCKET_TEST:
+        required: True
+      DISCORD_WEBHOOK:
+        required: True
+
+jobs:
+  discord_notification_backup_started:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Discord notification - backup Started
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        uses: Ilshidur/action-discord@master
+        with:
+          args: 'TEST-ENV backup started on project {{ EVENT_PAYLOAD.repository.full_name }}'
+
+  backup_dev_to_test_env:
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: 'us-east-2'
+      BACKUP_BUCKET_TEST: ${{ secrets.BACKUP_BUCKET_TEST }}
+    steps:
+      - name: Checkout Latest Repo
+        uses: actions/checkout@master
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-2
+
+      - name: Configure AWS profile
+        run: aws configure set region us-east-2 --profile default
+
+      - name: list directories
+        run: |
+          ls -lha
+          ls -lha ./redis
+          ls -lha ./rss_scraper
+          ls -lha ./web_app
+          cd $GITHUB_WORKSPACE
+          ls -lha
+          ls -lha ./redis
+          ls -lha ./rss_scraper
+          ls -lha ./web_app
+
+      - name: copilot help
+        run: copilot help
+
+      - name: copilot exec backup
+        run: copilot svc exec --app incidentmapr --env test --name redis --command "aws s3 sync /data/ s3://$BACKUP_BUCKET_TEST/hourly/"
+
+  discord_notification_backup_done:
+    needs: backup_dev_to_test_env
+    runs-on: ubuntu-latest
+    steps:
+      - name: Discord notification - Backup Successful
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        uses: Ilshidur/action-discord@master
+        with:
+          args: 'TEST-ENV backup SUCCESSFUL on project {{ EVENT_PAYLOAD.repository.full_name }}'
+
+  discord_notification_backup_failed:
+    needs: backup_dev_to_test_env
+    runs-on: ubuntu-latest
+    if: always() && (needs.backup_dev_to_test_env.result == 'failure')
+    steps:
+      - name: Discord notification - Backup Failed
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        uses: Ilshidur/action-discord@master
+        with:
+          args: 'TEST-ENV backup FAILED on project {{ EVENT_PAYLOAD.repository.full_name }}'
