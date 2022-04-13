@@ -31,7 +31,7 @@ jobs:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         uses: Ilshidur/action-discord@master
         with:
-          args: 'TEST-ENV backup started on project {{ EVENT_PAYLOAD.repository.full_name }}'
+          args: 'TEST-ENV backup started'
 
   backup_dev_to_test_env:
     runs-on: ubuntu-latest
@@ -79,7 +79,7 @@ jobs:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         uses: Ilshidur/action-discord@master
         with:
-          args: 'TEST-ENV backup SUCCESSFUL on project {{ EVENT_PAYLOAD.repository.full_name }}'
+          args: 'TEST-ENV backup SUCCESSFUL'
 
   discord_notification_backup_failed:
     needs: backup_dev_to_test_env
@@ -91,4 +91,4 @@ jobs:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         uses: Ilshidur/action-discord@master
         with:
-          args: 'TEST-ENV backup FAILED on project {{ EVENT_PAYLOAD.repository.full_name }}'
+          args: 'TEST-ENV backup FAILED'
