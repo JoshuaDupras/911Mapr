@@ -1,0 +1,94 @@
+name: prod-env-backup
+
+concurrency: prod
+
+# Controls when the workflow will run
+on:
+  schedule:
+    - cron: "0 * * * *"  # hourly
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+  # Allows this workflow to be run from another workflow
+  workflow_call:
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: True
+      AWS_SECRET_ACCESS_KEY:
+        required: True
+      BACKUP_BUCKET_PROD:
+        required: True
+      DISCORD_WEBHOOK:
+        required: True
+
+jobs:
+  discord_notification_backup_started:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Discord notification - backup Started
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        uses: Ilshidur/action-discord@master
+        with:
+          args: 'PROD-ENV backup started'
+
+  backup_dev_to_prod_env:
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: 'us-east-2'
+      BACKUP_BUCKET_PROD: ${{ secrets.BACKUP_BUCKET_PROD }}
+    steps:
+      - name: Checkout Latest Repo
+        uses: actions/checkout@master
+
+      - name: Install copilot
+        run: |
+          mkdir -p $GITHUB_WORKSPACE/bin
+          # download copilot
+          curl -Lo copilot-linux https://github.com/aws/copilot-cli/releases/download/v1.15.0/copilot-linux && \
+          # make copilot bin executable
+          chmod +x copilot-linux && \
+          # move to path
+          mv copilot-linux $GITHUB_WORKSPACE/bin/copilot && \
+          # add to PATH
+          echo "$GITHUB_WORKSPACE/bin" >> $GITHUB_PATH
+          sudo apt install -y expect
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-2
+
+      - name: Configure AWS profile
+        run: aws configure set region us-east-2 --profile default
+
+      - name: copilot exec backup
+        run: unbuffer copilot svc exec --app incidentmapr --env prod --name redis --command "aws s3 sync /data/ s3://$BACKUP_BUCKET_PROD/hourly/"
+
+  discord_notification_backup_done:
+    needs: backup_dev_to_prod_env
+    runs-on: ubuntu-latest
+    steps:
+      - name: Discord notification - Backup Successful
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        uses: Ilshidur/action-discord@master
+        with:
+          args: 'PROD-ENV backup SUCCESSFUL'
+
+  discord_notification_backup_failed:
+    needs: backup_dev_to_prod_env
+    runs-on: ubuntu-latest
+    if: always() && (needs.backup_dev_to_prod_env.result == 'failure')
+    steps:
+      - name: Discord notification - Backup Failed
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        uses: Ilshidur/action-discord@master
+        with:
+          args: 'PROD-ENV backup FAILED'
