@@ -8,3 +8,4 @@ secrets/
 !.elasticbeanstalk/*.global.yml
 # user files
 .ignore/*
+dump.rdb

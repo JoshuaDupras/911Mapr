@@ -11,7 +11,7 @@ services:
     restart:
       always
     volumes:
-      - redis:/data
+      - './redis/dump.rdb:/data/dump.rdb'
     ports:
       - "6379:6379"
 
