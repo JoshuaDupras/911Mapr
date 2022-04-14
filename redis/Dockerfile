@@ -4,6 +4,7 @@ ARG redis_pw
 ENV REDIS_PASSWORD=$redis_pw
 
 # Install AWS CLI - used for backups to S3
+ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update
 RUN apt-get --assume-yes install apt-utils
 RUN apt-get --assume-yes install curl
