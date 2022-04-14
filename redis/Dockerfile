@@ -7,11 +7,12 @@ ENV REDIS_PASSWORD=$redis_pw
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update
 RUN apt-get --assume-yes install apt-utils
-RUN apt-get --assume-yes install curl
+RUN apt-get --assume-yes install wget
 RUN apt-get --assume-yes install unzip
-RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+RUN wget https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -O awscliv2.zip
 RUN unzip awscliv2.zip
-RUN ./aws/install
+RUN cd aws && ./install
+RUN aws --version
 
 COPY redis.conf /usr/local/etc/redis/redis.conf
 
