@@ -231,6 +231,15 @@ def incident_stream():
     return Response(events(), mimetype="text/event-stream")
 
 
+@app.route('/sinfo', methods=['GET'])
+def ep_stream_info():
+    r = connect_to_redis()
+    stream_info = r.xinfo_stream(name=stream_key)
+    r.close()
+    return jsonify(stream_info)
+
+
+
 if __name__ == '__main__':
     # TODO: switch to production webserver
     app.logger.info('starting flask app')
