@@ -4,8 +4,8 @@ concurrency: test
 
 # Controls when the workflow will run
 on:
-  schedule:
-    - cron: "0 * * * *"  # hourly
+  #schedule:
+  #  - cron: "0 * * * *"  # hourly
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
