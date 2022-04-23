@@ -29,38 +29,6 @@ def index():
     return render_template('index.html')
 
 
-@app.route('/test', methods=['GET', 'POST'])
-def testfn():
-    app.logger.info(f'{request.remote_addr}: /test')
-    # GET request
-    if request.method == 'GET':
-        message = {'greeting': 'Hello from Flask!'}
-        return jsonify(message)  # serialize and use JSON headers
-    # POST request
-    if request.method == 'POST':
-        app.logger.info(request.get_json())  # parse as JSON
-        return 'Sucesss', 200
-
-
-######## Example data, in sets of 3 ############
-data = list(range(1, 300, 3))
-
-
-# app.logger.info(data)
-
-
-######## Data fetch ############
-@app.route('/getdata/<index_no>', methods=['GET', 'POST'])
-def data_get(index_no):
-    app.logger.info(f'{request.remote_addr}:data_get({index_no})')
-    if request.method == 'POST':  # POST request
-        app.logger.info(request.get_text())  # parse as text
-        return 'OK', 200
-
-    else:  # GET request
-        return 't_in = %s ; result: %s ;' % (index_no, data[int(index_no)])
-
-
 @app.route('/incidents/range/<time_range_str_start>_<time_range_str_end>', methods=['GET'])
 def get_time_range(time_range_str_start, time_range_str_end):
     request_start_ts = time.time()
