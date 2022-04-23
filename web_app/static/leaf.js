@@ -1,6 +1,11 @@
 const all_incidents_map = new Map();
 const max_num_markers = 250;
-var mapMarkers = [];
+
+
+const queryString = window.location.search;
+const urlParams = new URLSearchParams(queryString);
+const inc_str = urlParams.get('inc');
+console.log('inc_str=' + inc_str);
 
 var map = L.map('map', {
     preferCanvas: true,
@@ -51,6 +56,56 @@ fetch(`/incidents/init`)
         }
     });
 
+
+if (inc_str != null) {
+    console.log('inc_str is not null.. looking up id=' + inc_str);
+    fetch('/incidents/id/' + inc_str)
+        .then(response => response.json())
+        .then(response => {
+            console.log('query id = ' + inc_str + '. response=');
+            console.log(response);
+            load_incident_query(inc_str, response);
+        });
+}
+
+function load_incident_query(inc_str, query_response) {
+    console.log('generating incident obj from query response');
+
+    console.log('query_response=');
+    console.log(query_response);
+
+    geo = query_response.geo.split(",")  // geo is in "lon,lat" format
+
+    const inc_obj = {
+        addr: query_response.addr,
+        agency: query_response.agency,
+        id: inc_str,
+        lat: geo[1],
+        lon: geo[0],
+        status: [],
+        ts: query_response.ts,
+        type: query_response.type,
+    };
+
+    if ('WAITING' in query_response) {
+        inc_obj.status.unshift({ts: query_response.WAITING, type: 'WAITING'});
+    }
+    if ('DISPATCHED' in query_response) {
+        inc_obj.status.unshift({ts: query_response.DISPATCHED, type: 'DISPATCHED'});
+    }
+    if ('ENROUTE' in query_response) {
+        inc_obj.status.unshift({ts: query_response.ENROUTE, type: 'ENROUTE'});
+    }
+    if ('ONSCENE' in query_response) {
+        inc_obj.status.unshift({ts: query_response.ONSCENE, type: 'ONSCENE'});
+    }
+
+    console.log('returning incident obj:');
+    console.log(inc_obj);
+
+    add_new_incident(inc_obj);
+    click_inc_in_list(inc_str)
+}
 
 const live_source_delay_ms = 2500;
 setTimeout(() => {
