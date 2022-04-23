@@ -207,6 +207,14 @@ def ep_stream_info():
     return jsonify(stream_info)
 
 
+@app.route('/incidents/id/<id>', methods=['GET'])
+def get_inc_by_id(id):
+    hash_name = f'ROC:{id}'
+    r = connect_to_redis()
+    inc_data = r.hgetall(name=hash_name)
+    r.close()
+    return jsonify(inc_data)
+
 
 if __name__ == '__main__':
     # TODO: switch to production webserver
