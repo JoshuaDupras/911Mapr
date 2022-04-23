@@ -22,23 +22,6 @@ window.onload = (event) => {
     // fetch_last(10);
 };
 
-fetch('/test')
-    .then(function (response) {
-        return response.json();
-    }).then(text => {
-    console.log('GET response - greeting::');
-    console.log(text.greeting);
-});
-
-const index = 33;
-fetch(`/getdata/${index}`)
-    .then(response => response.text())
-    .then(text => {
-        console.log('GET response text:');
-        console.log(text);
-    });
-
-// TODO: implement last <hours/days> fetch, don't hardcode date/time
 fetch_hours = 3;
 fetch(`/incidents/init`)
     .then(response => response.json())
