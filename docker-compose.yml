@@ -43,6 +43,7 @@ services:
     environment:
       REDIS_HOST: redis
       REDIS_PASSWORD:
+      MAP_TOKEN:
 
 volumes:
   redis: { }

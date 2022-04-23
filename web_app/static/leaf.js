@@ -1,7 +1,6 @@
 const all_incidents_map = new Map();
 const max_num_markers = 250;
 
-
 const queryString = window.location.search;
 const urlParams = new URLSearchParams(queryString);
 const inc_str = urlParams.get('inc');
@@ -15,13 +14,20 @@ var map = L.map('map', {
 map.setView([43.1575, -77.6808], 10);
 map.zoomControl.setPosition('bottomright');
 
-L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
-    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-    tileSize: 512,
-    zoomOffset: -1,
-    id: 'mapbox/dark-v10',
-    accessToken: 'pk.eyJ1Ijoiam9zaHVhZHVwcmFzIiwiYSI6ImNreDR5enZ2ejI2NWsydnEzMHpiMGQzaTkifQ.1H9rEa9GIAO5ly-aBXkY9g' //ENTER YOUR ACCESS TOKEN HERE
-}).addTo(map);
+fetch('/map_token')
+    .then(response => response.text())
+    .then((response) => {
+        console.log('map_token=');
+        console.log(response);
+
+        L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+            tileSize: 512,
+            zoomOffset: -1,
+            id: 'mapbox/dark-v10',
+            accessToken: String(response) //ENTER YOUR ACCESS TOKEN HERE
+        }).addTo(map);
+    });
 
 window.onload = (event) => {
     console.log('page is fully loaded');
@@ -74,7 +80,7 @@ function load_incident_query(inc_str, query_response) {
     console.log('query_response=');
     console.log(query_response);
 
-    geo = query_response.geo.split(",")  // geo is in "lon,lat" format
+    geo = query_response.geo.split(",");  // geo is in "lon,lat" format
 
     const inc_obj = {
         addr: query_response.addr,
@@ -104,7 +110,7 @@ function load_incident_query(inc_str, query_response) {
     console.log(inc_obj);
 
     add_new_incident(inc_obj);
-    click_inc_in_list(inc_str)
+    click_inc_in_list(inc_str);
 }
 
 const live_source_delay_ms = 2500;

@@ -10,6 +10,8 @@ from redis import Redis
 
 logging.basicConfig(level=logging.INFO, format='{asctime} | {levelname:^8} | {name}.{lineno} : {message}', style='{')
 
+map_token = environ.get("MAP_TOKEN", None)
+
 app = Flask(__name__)
 
 stream_key = environ.get("STREAM", "S:ROC")
@@ -205,6 +207,12 @@ def ep_stream_info():
     stream_info = r.xinfo_stream(name=stream_key)
     r.close()
     return jsonify(stream_info)
+
+
+@app.route('/map_token', methods=['GET'])
+def get_map_token():
+    app.logger.info(f'serving map token = {map_token}')
+    return str(map_token)
 
 
 @app.route('/incidents/id/<id>', methods=['GET'])
