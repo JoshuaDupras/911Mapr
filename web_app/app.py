@@ -10,6 +10,8 @@ from redis import Redis
 
 logging.basicConfig(level=logging.INFO, format='{asctime} | {levelname:^8} | {name}.{lineno} : {message}', style='{')
 
+map_token = environ.get("MAP_TOKEN", None)
+
 app = Flask(__name__)
 
 stream_key = environ.get("STREAM", "S:ROC")
@@ -27,38 +29,6 @@ def connect_to_redis():
 def index():
     app.logger.info(f'{request.remote_addr}:index.html called')
     return render_template('index.html')
-
-
-@app.route('/test', methods=['GET', 'POST'])
-def testfn():
-    app.logger.info(f'{request.remote_addr}: /test')
-    # GET request
-    if request.method == 'GET':
-        message = {'greeting': 'Hello from Flask!'}
-        return jsonify(message)  # serialize and use JSON headers
-    # POST request
-    if request.method == 'POST':
-        app.logger.info(request.get_json())  # parse as JSON
-        return 'Sucesss', 200
-
-
-######## Example data, in sets of 3 ############
-data = list(range(1, 300, 3))
-
-
-# app.logger.info(data)
-
-
-######## Data fetch ############
-@app.route('/getdata/<index_no>', methods=['GET', 'POST'])
-def data_get(index_no):
-    app.logger.info(f'{request.remote_addr}:data_get({index_no})')
-    if request.method == 'POST':  # POST request
-        app.logger.info(request.get_text())  # parse as text
-        return 'OK', 200
-
-    else:  # GET request
-        return 't_in = %s ; result: %s ;' % (index_no, data[int(index_no)])
 
 
 @app.route('/incidents/range/<time_range_str_start>_<time_range_str_end>', methods=['GET'])
@@ -238,6 +208,20 @@ def ep_stream_info():
     r.close()
     return jsonify(stream_info)
 
+
+@app.route('/map_token', methods=['GET'])
+def get_map_token():
+    app.logger.info(f'serving map token = {map_token}')
+    return str(map_token)
+
+
+@app.route('/incidents/id/<id>', methods=['GET'])
+def get_inc_by_id(id):
+    hash_name = f'ROC:{id}'
+    r = connect_to_redis()
+    inc_data = r.hgetall(name=hash_name)
+    r.close()
+    return jsonify(inc_data)
 
 
 if __name__ == '__main__':

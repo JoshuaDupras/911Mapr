@@ -1,5 +1,10 @@
+const all_incidents_map = new Map();
 const max_num_markers = 250;
-var mapMarkers = [];
+
+const queryString = window.location.search;
+const urlParams = new URLSearchParams(queryString);
+const inc_str = urlParams.get('inc');
+console.log('inc_str=' + inc_str);
 
 var map = L.map('map', {
     preferCanvas: true,
@@ -9,37 +14,28 @@ var map = L.map('map', {
 map.setView([43.1575, -77.6808], 10);
 map.zoomControl.setPosition('bottomright');
 
-L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
-    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-    tileSize: 512,
-    zoomOffset: -1,
-    id: 'mapbox/dark-v10',
-    accessToken: 'pk.eyJ1Ijoiam9zaHVhZHVwcmFzIiwiYSI6ImNreDR5enZ2ejI2NWsydnEzMHpiMGQzaTkifQ.1H9rEa9GIAO5ly-aBXkY9g' //ENTER YOUR ACCESS TOKEN HERE
-}).addTo(map);
+fetch('/map_token')
+    .then(response => response.text())
+    .then((response) => {
+        console.log('map_token=');
+        console.log(response);
+
+        L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+            tileSize: 512,
+            zoomOffset: -1,
+            id: 'mapbox/dark-v10',
+            accessToken: String(response) //ENTER YOUR ACCESS TOKEN HERE
+        }).addTo(map);
+    });
 
 window.onload = (event) => {
     console.log('page is fully loaded');
     // fetch_last(10);
 };
 
-fetch('/test')
-    .then(function (response) {
-        return response.json();
-    }).then(text => {
-    console.log('GET response - greeting::');
-    console.log(text.greeting);
-});
-
-const index = 33;
-fetch(`/getdata/${index}`)
-    .then(response => response.text())
-    .then(text => {
-        console.log('GET response text:');
-        console.log(text);
-    });
-
-// TODO: implement last <hours/days> fetch, don't hardcode date/time
 fetch_hours = 3;
+console.log('fetching incidents from the last ' + fetch_hours + 'hours..');
 fetch(`/incidents/init`)
     .then(response => response.json())
     .then(response => {
@@ -62,13 +58,64 @@ fetch(`/incidents/init`)
             let json_message_data = message.data;
             console.log('message_data' + json_message_data);
 
-            update_markers(json_message_data);
+            process_event_msg(json_message_data);
         }
     });
 
 
+if (inc_str != null) {
+    console.log('inc_str is not null.. looking up id=' + inc_str);
+    fetch('/incidents/id/' + inc_str)
+        .then(response => response.json())
+        .then(response => {
+            console.log('query id = ' + inc_str + '. response=');
+            console.log(response);
+            load_incident_query(inc_str, response);
+        });
+}
+
+function load_incident_query(inc_str, query_response) {
+    console.log('generating incident obj from query response');
+
+    console.log('query_response=');
+    console.log(query_response);
+
+    geo = query_response.geo.split(",");  // geo is in "lon,lat" format
+
+    const inc_obj = {
+        addr: query_response.addr,
+        agency: query_response.agency,
+        id: inc_str,
+        lat: geo[1],
+        lon: geo[0],
+        status: [],
+        ts: query_response.ts,
+        type: query_response.type,
+    };
+
+    if ('WAITING' in query_response) {
+        inc_obj.status.unshift({ts: query_response.WAITING, type: 'WAITING'});
+    }
+    if ('DISPATCHED' in query_response) {
+        inc_obj.status.unshift({ts: query_response.DISPATCHED, type: 'DISPATCHED'});
+    }
+    if ('ENROUTE' in query_response) {
+        inc_obj.status.unshift({ts: query_response.ENROUTE, type: 'ENROUTE'});
+    }
+    if ('ONSCENE' in query_response) {
+        inc_obj.status.unshift({ts: query_response.ONSCENE, type: 'ONSCENE'});
+    }
+
+    console.log('returning incident obj:');
+    console.log(inc_obj);
+
+    add_new_incident(inc_obj);
+    click_inc_in_list(inc_str);
+}
+
 const live_source_delay_ms = 2500;
 setTimeout(() => {
+    // Starts the live event listener after some time has passed
     console.log('starting live events listener');
     var source_live = new EventSource('/incidents/live');
     source_live.addEventListener('message', function (e) {
@@ -81,84 +128,74 @@ setTimeout(() => {
         if ('heartbeat' in message_json_parsed) {
             console.log('got heartbeat');
         } else {
-            update_markers(message_json_parsed);
+            process_event_msg(message_json_parsed);
         }
     }, false);
 }, live_source_delay_ms);
 
-function update_markers(json_record) {
-    console.log('got record, updating markers');
-    let new_inc = new_incident_from_json(json_record);
+function process_event_msg(json_record) {
+    // Does the initial processing of an event message
+    // Checks if it's in the client's event list and adds it if necessary
+    // if event already exists, then the new status is added
+    console.log('got event message, updating markers');
+    const new_inc_obj = inc_obj_from_json(json_record);
 
     // check if id is in markers yet
-    console.log('num mapMarkers=' + mapMarkers.length);
+    console.log('all_incidents_map.size=' + all_incidents_map.size);
 
-    console.log('mapMarkers=');
-    console.log(mapMarkers);
 
-    for (const i in mapMarkers) {
-        existing_marker = mapMarkers[i];
-
-        // console.log('checking if marker IDs are equal (old:' + existing_marker.id + ', new:' + new_inc.id);
-
-        if (existing_marker.id === new_inc.id) {
-            // incident ID already exists, update this marker
-            // console.log('\tmarkers equal');
-            update_marker(i, new_inc);
-            return 1;
-        }
+    if (all_incidents_map.has(new_inc_obj.id)) {
+        // incident ID already exists, add this updated status to it
+        update_inc_status(new_inc_obj);
+        return 1;
     }
 
-    console.log('incident not found in mapMarkers, adding now..');
-    add_new_incident_to_map(new_inc);  // adds incident to mapMarkers
-}
-
-function add_new_incident_to_map(new_inc) {
-    // new incident ID, make new marker
-    let new_incident_marker = {
-        id: new_inc.id,
-        type: new_inc.type,
-        addr: new_inc.addr,
-        ts: new_inc.ts,
-        lat: new_inc.lat,
-        lon: new_inc.lon,
-        status: []
-    };
+    console.log('incident not found in all_incidents_map, adding now..');
 
     let status_obj = {
-        ts: new_inc.ts,
-        type: new_inc.status
+        ts: new_inc_obj.ts,
+        type: new_inc_obj.status
     };
-    new_incident_marker.status.unshift(status_obj);  // add status to incident
+    new_inc_obj.status = [];
+    new_inc_obj.status.unshift(status_obj);  // add status to incident
 
-    console.log('generated new_incident_marker:');
-    console.log(new_incident_marker);
+    add_new_incident(new_inc_obj);  // adds incident to all_incidents_map
+}
+
+function add_new_incident(new_inc) {
+    // adds new incident to global all_incidents_map, attaches map marker and places on sidebar list, then plays alert
+    console.log('adding new incident to client with ID=' + new_inc.id);
 
     // add marker, popup, etc
-    new_incident_marker = add_marker_to_incident(new_incident_marker);
+    new_inc = add_marker_to_incident(new_inc);
     console.log('added marker to incident. updated incident=');
-    console.log(new_incident_marker);
+    console.log(new_inc);
 
     // new_incident_marker.marker.openPopup();
-    let num_markers = mapMarkers.push(new_incident_marker);
+    all_incidents_map.set(new_inc.id, new_inc);
+    let num_markers = all_incidents_map.size;
 
-    console.log('added incident with marker to mapMarkers.');
+    console.log('added new incident. num_markers = ' + num_markers + '. max_num_markers = ' + max_num_markers);
 
     if (num_markers > max_num_markers) {
-        console.log('reached maximum number of markers (' + max_num_markers + '), removing the earliest.');
-        map.removeLayer(mapMarkers[(max_num_markers - 1)]);
-        mapMarkers.pop();
+        console.log('exceeded maximum number of markers (' + max_num_markers + '), removing the oldest entry.');
+        const [oldest_id] = map.keys();
+        console.log('oldest id=' + oldest_id); // 👉️ a
+        const [oldest_inc] = map.values();
+        console.log('oldest inc=' + oldest_inc); // 👉️ 1
+
+        map.removeLayer(oldest_inc.marker);
+        all_incidents_map.delete(oldest_id);
+        console.log('removed oldest incident with id=' + oldest_id);
     }
 
-    console.log('marker add complete. total markers = ' + mapMarkers.length);
-    let index = mapMarkers.length - 1;
-    console.log('new incident index = ' + index);
+    console.log('marker add complete. total markers = ' + all_incidents_map.size);
 
-    console.log('marker added -> mapMarkers=');
-    console.log(mapMarkers);
+    console.log('incident added to all_incident_map=');
+    console.log(all_incidents_map);
 
-    console.log('adding incident to incident table');
-    add_incident_to_sidebar_list(index);
+    console.log('adding incident to sidebar');
+    add_incident_to_sidebar_list(new_inc.id);
     play_alert();
 }
 
@@ -193,32 +230,35 @@ function add_marker_to_incident(inc) {
     return inc;
 }
 
-function update_marker(existing_marker_index, new_inc) {
-    console.log('updating marker with index=' + existing_marker_index);
+function update_inc_status(inc_obj) {
+    // status value is an array of status_items
+    target_id = inc_obj.id;
+    console.log('updating marker with id=' + target_id);
 
-    let status_obj = {
-        ts: new_inc.ts,
-        type: new_inc.status
+    let new_status_item = {
+        ts: inc_obj.ts,
+        type: inc_obj.status
     };
-    mapMarkers[existing_marker_index].status.unshift(status_obj);
+
+    // get current inc, add new status entry, re-map to updated incident
+    let temp_inc = all_incidents_map.get(target_id);
+    temp_inc.status.unshift(new_status_item);
+    all_incidents_map.set(target_id, temp_inc);
 
     console.log('marker with updated status=');
-    console.log(mapMarkers[existing_marker_index]);
+    console.log(all_incidents_map.get(target_id));
 
-    console.log('updating marker with string:');
-    let popup_str = get_popup_html(mapMarkers[existing_marker_index]);
-    console.log(popup_str);
-    mapMarkers[existing_marker_index].marker.setPopupContent(popup_str);
+    update_marker_popup(target_id);
 }
 
-function new_incident_from_json(json_record) {
+function inc_obj_from_json(json_record) {
     // do all fixups here: string, capitalize, etc
-    console.log('generating incident from json record');
+    console.log('generating incident obj from json record');
 
     console.log('json_record:');
     console.log(json_record);
 
-    const incident = {
+    const inc_obj = {
         addr: json_record["addr"],
         agency: json_record["agency"],
         id: json_record["id"],
@@ -229,9 +269,9 @@ function new_incident_from_json(json_record) {
         type: json_record["type"],
     };
 
-    console.log('returning incident:');
-    console.log(incident);
-    return incident;
+    console.log('returning incident obj:');
+    console.log(inc_obj);
+    return inc_obj;
 }
 
 function pretty_str_recurse_objects(obj, stop_recurse_keys = [], tab_spacer = '') {
@@ -255,11 +295,21 @@ function pretty_str_recurse_objects(obj, stop_recurse_keys = [], tab_spacer = ''
     return str;
 }
 
-function get_popup_html(marker) {
-    return '<h4 style="text-align: center;"><span style="color: #000000;"><strong>' + marker.type + '</strong></span></h4>\n' +
-        '<h5 style="text-align: center;"><span style="color: #323232;">' + marker.addr + '</span></h5>\n' +
-        '<h5 style="text-align: center;">&nbsp;</h5>\n' +
-        '<h6 style="text-align: center;"><span style="color: #2f1e1e;">' + convert_ts_to_est(marker.status.at(-1).ts) + '</span></h6>\n';
+
+function update_marker_popup(inc_id) {
+    console.log('updating marker for inc id=' + inc_id);
+    let temp_inc = all_incidents_map.get(inc_id);
+    let popup_str = get_popup_html(temp_inc);
+    temp_inc.marker.setPopupContent(popup_str);
+    all_incidents_map.set(inc_id, temp_inc);
+}
+
+function get_popup_html(inc) {
+    return '<h4 style="text-align: center;"><span style="color: #000000;"><strong>' + inc.type + '</strong></span></h4>\n' +
+        '<h5 style="text-align: center;"><span style="color: #323232;">' + inc.addr + '</span></h5>\n' +
+        '<h5 style="text-align: center;">ID: ' + inc.id + '</h5>\n' +
+        '<h6 style="text-align: center;"><span style="color: #2f1e1e;">' + convert_ts_to_est(inc.status.at(-1).ts) + '</span></h6>\n' +
+        '<h5 style="text-align: center;"><a href="https://www.911mapr.com/?inc=' + inc.id + '">Link to this incident</a></h5>';
 }
 
 function convert_ts_to_est(ts) {
@@ -267,20 +317,21 @@ function convert_ts_to_est(ts) {
 
     // convert to ISO 8601 format
     let split_ts = ts.split(" ");
-    const utc_date = split_ts[0] + 'T' + split_ts[1] + 'Z'
+    const utc_date = split_ts[0] + 'T' + split_ts[1] + 'Z';
 
-    let date = new Date(utc_date)
-    let local_date_str = date.toLocaleString()
+    let date = new Date(utc_date);
+    let local_date_str = date.toLocaleString();
 
-    local_date_str = local_date_str.replace('T', ' ')
-    local_date_str = local_date_str.replace('Z', ' ')
+    local_date_str = local_date_str.replace('T', ' ');
+    local_date_str = local_date_str.replace('Z', ' ');
 
-    return local_date_str
+    return local_date_str;
 
 }
+
 //{"ts": "2022-04-05 04:13:00", "id": "ROCE2209500025", "status": "WAITING", "type": "MVA / NO INJURIES", "addr": "W RIDGE RD/RIDGEWAY AVE ROC", "agency": "ROC", "lat": "+43.1944", "lon": "-77.6267"}
 
-var lc = L.control.locate({
+const lc = L.control.locate({
     position: 'bottomright',
     strings: {
         title: "Show me where I am, yo!"
@@ -360,17 +411,17 @@ function incTable_addRow(published, title, id) {
 var sidebar = L.control.sidebar('sidebar').addTo(map);
 map.addControl(sidebar);
 
-function get_sidebar_lg_html(inc_indx) {
-    let inc = mapMarkers[inc_indx];
-    console.log('generating html for sidebar incident list. inc index=' + inc_indx);
+function get_sidebar_lg_html(id) {
+    let inc = all_incidents_map.get(id);
+    console.log('generating html for sidebar incident list. inc id=' + id);
 
     let heading = inc.type + ' at ' + inc.addr;
     let cent = inc.id;
     let sml = inc.lat + ', ' + inc.lon;
-    let corn = convert_ts_to_est(inc.status.at(-1).ts)
+    let corn = convert_ts_to_est(inc.status.at(-1).ts);
 
     return '<a class="list-group-item list-group-item-action flex-column align-items-start"\n' +
-        'href="#" onclick="click_inc_in_list(' + inc_indx + ')" >\n' +
+        'href="#" onclick="click_inc_in_list(\'' + String(id) + '\')" >\n' +
         '<div class="d-flex w-100 justify-content-between">\n' +
         '<h5 class="mb-1">' + heading + '</h5>\n' +
         '<small>' + corn + '</small>\n' + '</div>\n' +
@@ -378,19 +429,23 @@ function get_sidebar_lg_html(inc_indx) {
         '<small>' + sml + '</small>\n' + '</a>';
 }
 
-function click_inc_in_list(index) {
-    open_inc_popup(index);
-    zoom_to_inc(index);
+function click_inc_in_list(id) {
+    console.log('clicking on inc with ID=' + id);
+    open_inc_popup(id);
+    zoom_to_inc(id);
+    // TODO: close incident list on mobile after selecting incident from list
 }
 
-function open_inc_popup(index) {
-    let inc = mapMarkers[index];
+function open_inc_popup(id) {
+    console.log('opening inc popup with ID=' + id);
+    let inc = all_incidents_map.get(id);
     inc.marker.openPopup();
 }
 
-function zoom_to_inc(index) {
+function zoom_to_inc(id) {
+    console.log('zooming to inc with ID=' + id);
     // TODO: Track whether sidebar is open or not, then adjust view accordingly
-    let inc = mapMarkers[index];
+    let inc = all_incidents_map.get(id);
     let inc_lat_lng = inc.marker.getLatLng();
     let zm_lvl = 13;
 
@@ -402,10 +457,10 @@ function zoom_to_inc(index) {
 
 var inc_lg_counter = 0;
 
-function add_incident_to_sidebar_list(inc_indx) {
-    console.log('adding incident to sidebar list with index = ' + inc_indx);
+function add_incident_to_sidebar_list(id) {
+    console.log('adding incident to sidebar list with id = ' + id);
     let target_el_query = "incident_list_content";
-    document.getElementById(target_el_query).innerHTML = get_sidebar_lg_html(inc_indx) + document.getElementById(target_el_query).innerHTML;
+    document.getElementById(target_el_query).innerHTML = get_sidebar_lg_html(id) + document.getElementById(target_el_query).innerHTML;
 }
 
 start_ms = Date.now();
@@ -442,7 +497,7 @@ function add_test_inc() {
     console.log('creating test incident:');
     console.log(test_json_data);
 
-    update_markers(test_json_data);
+    process_event_msg(test_json_data);
 }
 
 // const sound_on_toast = bootstrap.Toast.getInstance(document.getElementById('sound_on_toast'));
@@ -472,4 +527,3 @@ function play_alert() {
         console.log('volume muted - not playing alert');
     }
 }
-

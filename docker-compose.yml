@@ -27,6 +27,7 @@ services:
     environment:
       REDIS_HOST: redis
       REDIS_PASSWORD:
+      RSS_SCRAPER_DEBUG_MODE:
 
   web_app:
     build:
@@ -43,6 +44,26 @@ services:
     environment:
       REDIS_HOST: redis
       REDIS_PASSWORD:
+      MAP_TOKEN:
+
+  twitter_bot:
+    build:
+      context: ./twitter_bot
+    depends_on:
+      - redis
+      - rss_scraper
+    networks:
+      - backend
+    restart:
+      always
+    environment:
+      REDIS_HOST: redis
+      REDIS_PASSWORD:
+      CONSUMER_KEY:
+      CONSUMER_KEY_SECRET:
+      AUTH_TOKEN:
+      AUTH_TOKEN_SECRET:
+      TWEET_ENABLED:
 
 volumes:
   redis: { }
