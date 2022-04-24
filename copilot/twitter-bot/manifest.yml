@@ -25,7 +25,7 @@ exec: true     # Enable running commands in your container.
 #variables:                    # Pass environment variables as key value pairs.
 #  LOG_LEVEL: info
 
-#secrets:                      # Pass secrets from AWS Systems Manager (SSM) Parameter Store.
+secrets:                      # Pass secrets from AWS Systems Manager (SSM) Parameter Store.
   REDIS_PASSWORD: '/copilot/${COPILOT_APPLICATION_NAME}/${COPILOT_ENVIRONMENT_NAME}/secrets/REDIS_PASSWORD'
   TWEET_ENABLED: '/copilot/${COPILOT_APPLICATION_NAME}/${COPILOT_ENVIRONMENT_NAME}/secrets/TWEET_ENABLED'
   CONSUMER_KEY: '/copilot/${COPILOT_APPLICATION_NAME}/${COPILOT_ENVIRONMENT_NAME}/secrets/CONSUMER_KEY'
