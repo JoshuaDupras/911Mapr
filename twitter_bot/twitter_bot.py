@@ -59,7 +59,9 @@ while True:
         print(f"DATA = {data}")
 
         link = f'{link_domain}/?inc={data["id"]}'
-        tweet_text = f'{data["type"]} at {data["addr"]}\n\nView on map:{link}]'
+        tweet_text = f'{data["type"]} at {data["addr"]}\n\nView on map:{link}\n#ROC'
+        tweet_text.replace('@', 'AT ')
+
         print(f'generated tweet text = "{tweet_text}"')
 
         if data['new'] == '0':
