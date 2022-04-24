@@ -1,3 +1,4 @@
+import random
 from datetime import datetime, timezone
 import time
 from os import environ
@@ -11,8 +12,10 @@ producer = environ.get("PRODUCER", "user-1")
 MAX_MESSAGES = int(environ.get("MESSAGES", "5000"))
 location_str = 'ROC'
 stream_name = f'S:{location_str}'
-debug_mode = False  # generate debug incidents
+debug_mode = environ.get("RSS_SCRAPER_DEBUG_MODE", 'False').lower() in ('true', '1', 't')  # generate debug incidents
 delay_sec = 10
+
+print(f'debug mode = {debug_mode}')
 
 
 def connect_to_redis():
@@ -146,8 +149,10 @@ def rss_to_redis():
 
             # TODO: 1 hash with multiple statuses show the same 'published time', might want to use scraped time?
 
-            rc.hsetnx(name=hash_name, key=f'{inc_status}-scraped_utc', value=str(scraped_dt_utc))  # TODO: remove, if best_dt_utc works well
-            rc.hsetnx(name=hash_name, key=f'{inc_status}-published_utc', value=str(published_dt_utc))  # TODO: remove, if best_dt_utc works well
+            rc.hsetnx(name=hash_name, key=f'{inc_status}-scraped_utc',
+                      value=str(scraped_dt_utc))  # TODO: remove, if best_dt_utc works well
+            rc.hsetnx(name=hash_name, key=f'{inc_status}-published_utc',
+                      value=str(published_dt_utc))  # TODO: remove, if best_dt_utc works well
 
             wrote_new_status = rc.hsetnx(name=hash_name, key=f'{inc_status}', value=str(best_dt_utc))
 
@@ -174,6 +179,7 @@ def rss_to_redis():
                     'agency': inc_agency,
                     'lat': inc_geo_lat,
                     'lon': inc_geo_lon,
+                    'new': wrote_new_incident
                 }
                 rc.xadd(name=stream_name, fields=stream_data)
 
@@ -186,7 +192,7 @@ def rss_to_redis():
                 for k, v in incident_dic.items():
                     print(f'{ctime_now()}: key={k}, value={v}')
             # else:
-                # print(f'\n{ctime_now()}: no writes needed')
+            # print(f'\n{ctime_now()}: no writes needed')
 
         if debug_mode:
             stream_data = {
@@ -198,6 +204,7 @@ def rss_to_redis():
                 'agency': 'DBG',
                 'lat': f'+43.{str(round(time.time()))[-4:]}',
                 'lon': f'-77.{str(round(time.time()))[-4:]}',
+                'new': random.choice(['1', '0'])
             }
             print(f'DEBUG MODE ENABLED - generating debug incident - data={stream_data}')
             rc.xadd(name=stream_name, fields=stream_data)
