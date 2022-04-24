@@ -308,7 +308,8 @@ function get_popup_html(inc) {
     return '<h4 style="text-align: center;"><span style="color: #000000;"><strong>' + inc.type + '</strong></span></h4>\n' +
         '<h5 style="text-align: center;"><span style="color: #323232;">' + inc.addr + '</span></h5>\n' +
         '<h5 style="text-align: center;">ID: ' + inc.id + '</h5>\n' +
-        '<h6 style="text-align: center;"><span style="color: #2f1e1e;">' + convert_ts_to_est(inc.status.at(-1).ts) + '</span></h6>\n';
+        '<h6 style="text-align: center;"><span style="color: #2f1e1e;">' + convert_ts_to_est(inc.status.at(-1).ts) + '</span></h6>\n' +
+        '<h5 style="text-align: center;"><a href="https://www.911mapr.com/?inc=' + inc.id + '">Link to this incident</a></h5>';
 }
 
 function convert_ts_to_est(ts) {
