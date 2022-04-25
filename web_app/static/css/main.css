@@ -16,6 +16,7 @@ html, body, #map {
 }
 
 #logo_container {
+    pointer-events: none;
     position: absolute;
     width: 100%;
     top: 5px;
