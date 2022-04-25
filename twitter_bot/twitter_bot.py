@@ -60,7 +60,7 @@ while True:
 
         link = f'{link_domain}/?inc={data["id"]}'
         tweet_text = f'{data["type"]} at {data["addr"]}\n\nView on map:{link}\n#ROC'
-        tweet_text.replace('@', 'AT ')
+        tweet_text = tweet_text.replace('@', '@ ')
 
         print(f'generated tweet text = "{tweet_text}"')
 
