@@ -1,5 +1,7 @@
 name: Dev-Push
 
+concurrency: test
+
 # Controls when the workflow will run
 on:
   push:
