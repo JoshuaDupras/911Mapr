@@ -8,10 +8,10 @@ console.log('inc_str=' + inc_str);
 
 var map = L.map('map', {
     preferCanvas: true,
-    minZoom: 9,
+    minZoom: 10,
     maxZoom: 18
 });
-map.setView([43.1575, -77.6808], 10);
+map.setView([43.1427, -77.6161], 10);
 map.zoomControl.setPosition('bottomright');
 
 fetch('/map_token')
@@ -340,15 +340,18 @@ const lc = L.control.locate({
 
 // coordinates limiting the map
 function getBounds() {
-    const southWest = new L.LatLng(42.80, -78.10);
-    const northEast = new L.LatLng(43.50, -77.30);
+    const southWest = new L.LatLng(42.65, -78.5);
+    const northEast = new L.LatLng(43.70, -76.80);
     return new L.LatLngBounds(southWest, northEast);
 }
 
 // set maxBounds
 map.setMaxBounds(getBounds());
 
-// zoom the map to the polyline
+// var boundingBox = L.rectangle(getBounds(), {color: "#ff7800", weight: 1});
+// map.addLayer(boundingBox);
+
+// zoom the map to the bounding box
 // map.fitBounds(getBounds(), {reset: true});
 
 var county_border_style = {
