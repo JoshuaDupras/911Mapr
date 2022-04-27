@@ -55,7 +55,7 @@ jobs:
     needs: lighthouse
     runs-on: ubuntu-latest
     steps:
-      - name: Discord notification - Un-deploy Successful
+      - name: Discord notification - Lighthouse Test Successful
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         uses: Ilshidur/action-discord@master
@@ -67,7 +67,7 @@ jobs:
     runs-on: ubuntu-latest
     if: always() && (needs.lighthouse.result == 'failure')
     steps:
-      - name: Discord notification - Un-deploy Failed
+      - name: Discord notification - Lighthouse Test Failed
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         uses: Ilshidur/action-discord@master
