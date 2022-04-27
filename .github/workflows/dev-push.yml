@@ -1,5 +1,7 @@
 name: Dev-Push
 
+concurrency: dev-push
+
 # Controls when the workflow will run
 on:
   push:
@@ -8,7 +10,6 @@ on:
     paths-ignore:
       - 'README.md'
       - '.github/**'
-      - 'LICENSE'
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -28,7 +29,6 @@ jobs:
           args: 'dev-push workflow started for project {{ EVENT_PAYLOAD.repository.full_name }}.'
 
   deploy_dev_to_test:
-    needs: [ discord_notifcation_dev_push_start ]
     uses: ./.github/workflows/deploy-dev-to-test.yml
     secrets:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
