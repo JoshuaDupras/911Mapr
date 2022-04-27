@@ -146,11 +146,11 @@ def incident_stream():
 
     ignore_list = ['keepalive']  # TODO: re-enable
 
-    def events():
+    def stream():
         app.logger.info('starting live xread loop')
         last_msg_ts = None
-        poll_delay_s = 5  # TODO: drop this to 0.5 in prod
-        heartbeat_cadence_s = 30  # TODO: this could probably be 30 or more
+        poll_delay_s = 5
+        heartbeat_cadence_s = 30
 
         last_msg_ts = None
 
@@ -198,7 +198,17 @@ def incident_stream():
             app.logger.info('bottom of while True loop')
 
     r.close()
-    return Response(events(), mimetype="text/event-stream")
+
+    # Return an SSE stream
+    headers = {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-transform',
+        'Connection': 'keep-alive',
+        'Accept-Encoding': '*',
+        'X-Accel-Buffering': 'no'
+    }
+
+    return Response(stream(), mimetype="text/event-stream", headers=headers)
 
 
 @app.route('/sinfo', methods=['GET'])
@@ -225,7 +235,6 @@ def get_inc_by_id(id):
 
 
 if __name__ == '__main__':
-    # TODO: switch to production webserver
     app.logger.info('starting flask app')
-    app.debug = True
-    app.run(threaded=True, host='0.0.0.0', port=80)
+    # app.debug = True
+    app.run(threaded=True, host='0.0.0.0', port=5000)

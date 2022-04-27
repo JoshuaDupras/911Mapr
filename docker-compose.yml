@@ -35,8 +35,6 @@ services:
     depends_on:
       - redis
       - rss_scraper
-    ports:
-      - "80:80"
     networks:
       - backend
     restart:
@@ -46,12 +44,22 @@ services:
       REDIS_PASSWORD:
       MAP_TOKEN:
 
+  nginx:
+    build: ./nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - web_app
+    networks:
+      - backend
+    environment:
+      WEB_APP_HOST: web_app
+
   twitter_bot:
     build:
       context: ./twitter_bot
     depends_on:
       - redis
-      - rss_scraper
     networks:
       - backend
     restart:

@@ -2,10 +2,6 @@ secrets/
 /venv/
 /.idea/
 .env
-# Elastic Beanstalk Files
-.elasticbeanstalk/*
-!.elasticbeanstalk/*.cfg.yml
-!.elasticbeanstalk/*.global.yml
-# user files
 .ignore/*
 dump.rdb
+/twitter_bot/twitter_auth/

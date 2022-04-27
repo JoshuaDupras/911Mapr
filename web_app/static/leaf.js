@@ -8,10 +8,10 @@ console.log('inc_str=' + inc_str);
 
 var map = L.map('map', {
     preferCanvas: true,
-    minZoom: 9,
+    minZoom: 10,
     maxZoom: 18
 });
-map.setView([43.1575, -77.6808], 10);
+map.setView([43.1427, -77.6161], 10);
 map.zoomControl.setPosition('bottomright');
 
 fetch('/map_token')
@@ -91,6 +91,7 @@ function load_incident_query(inc_str, query_response) {
         status: [],
         ts: query_response.ts,
         type: query_response.type,
+        seen: false
     };
 
     if ('WAITING' in query_response) {
@@ -110,7 +111,9 @@ function load_incident_query(inc_str, query_response) {
     console.log(inc_obj);
 
     add_new_incident(inc_obj);
-    click_inc_in_list(inc_str);
+    mark_inc_seen(inc_str)
+    zoom_to_inc(inc_str)
+    open_inc_popup(inc_str)
 }
 
 const live_source_delay_ms = 2500;
@@ -166,14 +169,11 @@ function add_new_incident(new_inc) {
     // adds new incident to global all_incidents_map, attaches map marker and places on sidebar list, then plays alert
     console.log('adding new incident to client with ID=' + new_inc.id);
 
-    // add marker, popup, etc
-    new_inc = add_marker_to_incident(new_inc);
-    console.log('added marker to incident. updated incident=');
-    console.log(new_inc);
-
-    // new_incident_marker.marker.openPopup();
     all_incidents_map.set(new_inc.id, new_inc);
     let num_markers = all_incidents_map.size;
+
+    // add marker with popup
+    generate_marker(new_inc.id);
 
     console.log('added new incident. num_markers = ' + num_markers + '. max_num_markers = ' + max_num_markers);
 
@@ -199,40 +199,9 @@ function add_new_incident(new_inc) {
     play_alert();
 }
 
-function add_marker_to_incident(inc) {
-    // TODO: marker color based on latest status type
-
-    console.log('adding marker to incident. inc=');
-    console.log(inc);
-
-    var pulsingIcon = L.icon.pulse({iconSize: [10, 10], color: 'blue'});
-    var marker = L.marker([inc.lat, inc.lon], {icon: pulsingIcon}).addTo(map);
-
-    // non-pulsing marker
-    // marker = L.circleMarker([lat, lon], {
-    //   color: '#3388ff'
-    // }).addTo(map);
-
-    let popup_str = get_popup_html(inc);
-
-    const popup_options =
-        {
-            'maxWidth': '250',
-            'className': 'custom_popup'
-        };
-
-    console.log('adding marker with string:');
-    console.log(popup_str);
-    marker.bindPopup(popup_str, popup_options);
-
-    inc.marker = marker;
-
-    return inc;
-}
-
 function update_inc_status(inc_obj) {
     // status value is an array of status_items
-    target_id = inc_obj.id;
+    let target_id = inc_obj.id;
     console.log('updating marker with id=' + target_id);
 
     let new_status_item = {
@@ -304,6 +273,53 @@ function update_marker_popup(inc_id) {
     all_incidents_map.set(inc_id, temp_inc);
 }
 
+function generate_marker(inc_id) {
+    console.log('generating marker for inc id=' + inc_id);
+    let temp_inc = all_incidents_map.get(inc_id);
+
+    if ('marker' in temp_inc) {
+        map.removeLayer(temp_inc.marker);
+    }
+
+    let popup_str = get_popup_html(temp_inc);
+    let inc_marker;
+    if (temp_inc.seen) {
+        // non-pulsing marker when seen
+        const seen_icon = L.divIcon({
+            className: 'seen-icon',
+            iconSize: [10, 10]
+        });
+        inc_marker = L.marker([temp_inc.lat, temp_inc.lon], {
+            icon: seen_icon,
+            title: inc_id
+        });
+        console.log('generated SEEN marker with string:' + popup_str);
+        console.log(popup_str);
+    } else {
+        // pulsing marker when never seen
+        const pulsingIcon = L.icon.pulse({iconSize: [10, 10], color: 'blue'});
+        inc_marker = L.marker([temp_inc.lat, temp_inc.lon], {
+            icon: pulsingIcon,
+            title: inc_id
+        });
+        console.log('generated UNSEEN (pulsing) marker with string:' + popup_str);
+    }
+
+    const popup_options =
+        {
+            'maxWidth': '250',
+            'className': 'custom_popup'
+        };
+
+    inc_marker.bindPopup(popup_str, popup_options);
+
+    temp_inc.marker = inc_marker;
+    temp_inc.marker.on('click', markerOnClick).addTo(map);
+
+    temp_inc.marker.setPopupContent(popup_str);
+    all_incidents_map.set(inc_id, temp_inc);
+}
+
 function get_popup_html(inc) {
     return '<h4 style="text-align: center;"><span style="color: #000000;"><strong>' + inc.type + '</strong></span></h4>\n' +
         '<h5 style="text-align: center;"><span style="color: #323232;">' + inc.addr + '</span></h5>\n' +
@@ -340,15 +356,18 @@ const lc = L.control.locate({
 
 // coordinates limiting the map
 function getBounds() {
-    const southWest = new L.LatLng(42.80, -78.10);
-    const northEast = new L.LatLng(43.50, -77.30);
+    const southWest = new L.LatLng(42.65, -78.5);
+    const northEast = new L.LatLng(43.70, -76.80);
     return new L.LatLngBounds(southWest, northEast);
 }
 
 // set maxBounds
 map.setMaxBounds(getBounds());
 
-// zoom the map to the polyline
+// var boundingBox = L.rectangle(getBounds(), {color: "#ff7800", weight: 1});
+// map.addLayer(boundingBox);
+
+// zoom the map to the bounding box
 // map.fitBounds(getBounds(), {reset: true});
 
 var county_border_style = {
@@ -429,11 +448,31 @@ function get_sidebar_lg_html(id) {
         '<small>' + sml + '</small>\n' + '</a>';
 }
 
+function markerOnClick(e) {
+    // TODO: prevent marker from opening on first click, wait until it's regenerated (if "seen" changes state)
+    let clicked_marker_id = this.options.title;
+    mark_inc_seen(clicked_marker_id);
+    zoom_to_inc(clicked_marker_id)
+    open_inc_popup(clicked_marker_id);
+}
+
 function click_inc_in_list(id) {
     console.log('clicking on inc with ID=' + id);
-    open_inc_popup(id);
     zoom_to_inc(id);
+    mark_inc_seen(id);
+    open_inc_popup(id);
     // TODO: close incident list on mobile after selecting incident from list
+}
+
+function mark_inc_seen(id) {
+    console.log('marking ID=' + id + ' as seen');
+    let temp_inc = all_incidents_map.get(id);
+    if (temp_inc.seen) {
+        console.log('WARNING: ID=' + id + ' has already been marked as seen');
+    } else {
+        temp_inc.seen = true;
+        generate_marker(id);
+    }
 }
 
 function open_inc_popup(id) {
@@ -466,38 +505,33 @@ function add_incident_to_sidebar_list(id) {
 start_ms = Date.now();
 
 function add_test_inc() {
-    delta_ms = Date.now() - start_ms;
+    let delta_ms = Date.now() - start_ms;
     console.log('delta_ms=');
     console.log(delta_ms);
 
-    delta_s = delta_ms / 1000;
-    modulo_ms = delta_ms % 1000;
+    let delta_s = delta_ms / 1000;
+    let modulo_ms = delta_ms % 1000;
     console.log('modulo_ms=');
     console.log(modulo_ms);
 
-    test_id = 'TEST' + String(modulo_ms);
-    test_status = 'NOSTATUS';
-    test_id_status = test_id + '_' + test_status;
+    let test_lat = '43.' + String(modulo_ms);
+    let test_lon = '-77.' + String(modulo_ms);
+    let geo = test_lon + ', +' + test_lat;
 
-    test_lat = '43.1' + String(modulo_ms);
-    test_lon = '-77.6' + String(modulo_ms);
+    let test_query_response = {
+        "DISPATCHED": "2000-01-01 00:00:00.000000",
+        "addr": "TEST ADDRESS, ROC",
+        "agency": "TST",
+        "geo": geo,
+        "type": "TEST"
+    };
 
-    test_json_data = [
-        delta_s,
-        "2022-02-26 05:16:27",
-        "TEST CATEGORY at TEST ADDRESS, Rochester",
-        "2022-02-26 05:12:00",
-        test_id_status,
-        test_id,
-        test_status,
-        test_lat,
-        test_lon
-    ];
+    let test_id = 'TEST' + String(modulo_ms);
 
-    console.log('creating test incident:');
-    console.log(test_json_data);
+    console.log('generated test incident:');
+    console.log(test_query_response)
 
-    process_event_msg(test_json_data);
+    load_incident_query(test_id, test_query_response);
 }
 
 // const sound_on_toast = bootstrap.Toast.getInstance(document.getElementById('sound_on_toast'));
