@@ -15,6 +15,21 @@ html, body, #map {
     font: 10pt "Helvetica Neue", Arial, Helvetica, sans-serif;
 }
 
+#logo_container {
+    pointer-events: none;
+    position: absolute;
+    width: 100%;
+    top: 5px;
+    z-index: 999;
+    padding: 0.2rem;
+    display: flex;
+    justify-content: center;
+}
+
+#logo_image {
+    width: 200px;
+}
+
 .about_head {
     font-style: normal;
     color: var(--color-accent);
