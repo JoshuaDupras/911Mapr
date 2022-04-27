@@ -97,3 +97,8 @@ html, body, #map {
     background: rgba(255, 103, 0, 0.77);
     border-color: #ff6900;
 }
+
+.seen-icon {
+    border-radius: 100%;
+    background-color: red;
+}
