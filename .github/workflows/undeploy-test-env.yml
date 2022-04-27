@@ -89,11 +89,14 @@ jobs:
       - name: un-deploy web_app container
         run: copilot deploy --app incidentmapr --env test --name web-app
 
+      - name: init nginx container
+        run: copilot deploy --app incidentmapr --env test --name nginx
+
       - name: copilot show services
         run: copilot svc ls
 
-      - name: copilot show web-app service
-        run: copilot svc show --name web-app
+      - name: copilot show nginx service
+        run: copilot svc show --name nginx
 
   discord_notification_undeploy_done:
     needs: undeploy_test_env
