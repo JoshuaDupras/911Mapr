@@ -4,3 +4,4 @@ secrets/
 .env
 .ignore/*
 dump.rdb
+/twitter_bot/twitter_auth/
