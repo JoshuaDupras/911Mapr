@@ -7,8 +7,8 @@ const inc_str = urlParams.get('inc');
 console.log('inc_str=' + inc_str);
 
 initial_seen_ids = JSON.parse(localStorage.getItem('seen_ids'));
-console.log('initial seen_ids:')
-console.log(initial_seen_ids)
+console.log('initial seen_ids:');
+console.log(initial_seen_ids);
 
 const map = L.map('map', {
     preferCanvas: true,
@@ -115,9 +115,9 @@ function load_incident_query(inc_str, query_response) {
     console.log(inc_obj);
 
     add_new_incident(inc_obj);
-    mark_inc_seen(inc_str)
-    zoom_to_inc(inc_str)
-    open_inc_popup(inc_str)
+    mark_inc_seen(inc_str);
+    zoom_to_inc(inc_str);
+    open_inc_popup(inc_str);
 }
 
 const live_source_delay_ms = 2500;
@@ -160,7 +160,6 @@ function process_event_msg(json_record) {
     console.log('incident not found in all_incidents_map, adding now..');
 
 
-
     add_new_incident(new_inc_obj);  // adds incident to all_incidents_map
 }
 
@@ -177,17 +176,21 @@ function add_new_incident(new_inc) {
     new_inc.status.unshift(status_obj);  // add status to incident
 
     // check whether the client has previously seen this incident with localStorage
-    let temp_seen_ids = JSON.parse(localStorage.getItem('seen_ids'));
-    console.log('previously seen ids =')
-    console.log(temp_seen_ids)
-    console.log('this id = ')
-    console.log(new_inc.id)
-    if (temp_seen_ids.includes(new_inc.id)) {
-        console.log('incident ID=' + new_inc.id + ' has previously been seen by this client')
-        new_inc.seen = true
+    if (localStorage.getItem("seen_ids") === null) {
+        console.log('seen_ids is empty')
     } else {
-        console.log('incident ID=' + new_inc.id + ' has never been seen by this client')
-        new_inc.seen = false
+        let temp_seen_ids = JSON.parse(localStorage.getItem('seen_ids'));
+        console.log('previously seen ids =');
+        console.log(temp_seen_ids);
+        console.log('this id = ');
+        console.log(new_inc.id);
+        if (temp_seen_ids.includes(new_inc.id)) {
+            console.log('incident ID=' + new_inc.id + ' has previously been seen by this client');
+            new_inc.seen = true;
+        } else {
+            console.log('incident ID=' + new_inc.id + ' has never been seen by this client');
+            new_inc.seen = false;
+        }
     }
 
     all_incidents_map.set(new_inc.id, new_inc);
@@ -473,7 +476,7 @@ function markerOnClick(e) {
     // TODO: prevent marker from opening on first click, wait until it's regenerated (if "seen" changes state)
     let clicked_marker_id = this.options.title;
     mark_inc_seen(clicked_marker_id);
-    zoom_to_inc(clicked_marker_id)
+    zoom_to_inc(clicked_marker_id);
     open_inc_popup(clicked_marker_id);
 }
 
@@ -503,11 +506,11 @@ function mark_inc_seen(id) {
         } else {
             temp_seen_ids = JSON.parse(localStorage.getItem('seen_ids'));
             if (temp_seen_ids.includes(id)) {
-                console.log('ID=' + id + ' has already been seen, not adding it to localStorage')
+                console.log('ID=' + id + ' has already been seen, not adding it to localStorage');
             } else {
                 temp_seen_ids.push(id);
                 localStorage.setItem('seen_ids', JSON.stringify(temp_seen_ids));
-                console.log('added ID=' + id + ' to localStorage')
+                console.log('added ID=' + id + ' to localStorage');
             }
         }
     }
@@ -567,7 +570,7 @@ function add_test_inc() {
     let test_id = 'TEST' + String(modulo_ms);
 
     console.log('generated test incident:');
-    console.log(test_query_response)
+    console.log(test_query_response);
 
     load_incident_query(test_id, test_query_response);
 }
