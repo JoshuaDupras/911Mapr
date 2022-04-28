@@ -6,7 +6,11 @@ const urlParams = new URLSearchParams(queryString);
 const inc_str = urlParams.get('inc');
 console.log('inc_str=' + inc_str);
 
-var map = L.map('map', {
+initial_seen_ids = JSON.parse(localStorage.getItem('seen_ids'));
+console.log('initial seen_ids:')
+console.log(initial_seen_ids)
+
+const map = L.map('map', {
     preferCanvas: true,
     minZoom: 10,
     maxZoom: 18
@@ -137,7 +141,7 @@ setTimeout(() => {
 }, live_source_delay_ms);
 
 function process_event_msg(json_record) {
-    // Does the initial processing of an event message
+    // Does the initial processing of an event message (both initial load and live)
     // Checks if it's in the client's event list and adds it if necessary
     // if event already exists, then the new status is added
     console.log('got event message, updating markers');
@@ -155,12 +159,7 @@ function process_event_msg(json_record) {
 
     console.log('incident not found in all_incidents_map, adding now..');
 
-    let status_obj = {
-        ts: new_inc_obj.ts,
-        type: new_inc_obj.status
-    };
-    new_inc_obj.status = [];
-    new_inc_obj.status.unshift(status_obj);  // add status to incident
+
 
     add_new_incident(new_inc_obj);  // adds incident to all_incidents_map
 }
@@ -168,6 +167,28 @@ function process_event_msg(json_record) {
 function add_new_incident(new_inc) {
     // adds new incident to global all_incidents_map, attaches map marker and places on sidebar list, then plays alert
     console.log('adding new incident to client with ID=' + new_inc.id);
+
+    // Give incident an empty status object
+    let status_obj = {
+        ts: new_inc.ts,
+        type: new_inc.status
+    };
+    new_inc.status = [];
+    new_inc.status.unshift(status_obj);  // add status to incident
+
+    // check whether the client has previously seen this incident with localStorage
+    let temp_seen_ids = JSON.parse(localStorage.getItem('seen_ids'));
+    console.log('previously seen ids =')
+    console.log(temp_seen_ids)
+    console.log('this id = ')
+    console.log(new_inc.id)
+    if (temp_seen_ids.includes(new_inc.id)) {
+        console.log('incident ID=' + new_inc.id + ' has previously been seen by this client')
+        new_inc.seen = true
+    } else {
+        console.log('incident ID=' + new_inc.id + ' has never been seen by this client')
+        new_inc.seen = false
+    }
 
     all_incidents_map.set(new_inc.id, new_inc);
     let num_markers = all_incidents_map.size;
@@ -467,11 +488,28 @@ function click_inc_in_list(id) {
 function mark_inc_seen(id) {
     console.log('marking ID=' + id + ' as seen');
     let temp_inc = all_incidents_map.get(id);
+
     if (temp_inc.seen) {
         console.log('WARNING: ID=' + id + ' has already been marked as seen');
     } else {
         temp_inc.seen = true;
         generate_marker(id);
+
+        console.log('putting ID=' + id + ' in localStorage with key "seen_ids"');
+        let temp_seen_ids;
+        if (localStorage.getItem("seen_ids") === null) {
+            console.log('making the first entry in seen_ids');
+            temp_seen_ids = [];
+        } else {
+            temp_seen_ids = JSON.parse(localStorage.getItem('seen_ids'));
+            if (temp_seen_ids.includes(id)) {
+                console.log('ID=' + id + ' has already been seen, not adding it to localStorage')
+            } else {
+                temp_seen_ids.push(id);
+                localStorage.setItem('seen_ids', JSON.stringify(temp_seen_ids));
+                console.log('added ID=' + id + ' to localStorage')
+            }
+        }
     }
 }
 
