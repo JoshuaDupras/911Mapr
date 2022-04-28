@@ -177,7 +177,7 @@ function add_new_incident(new_inc) {
 
     // check whether the client has previously seen this incident with localStorage
     if (localStorage.getItem("seen_ids") === null) {
-        console.log('seen_ids is empty')
+        console.log('seen_ids is empty');
     } else {
         let temp_seen_ids = JSON.parse(localStorage.getItem('seen_ids'));
         console.log('previously seen ids =');
@@ -507,12 +507,12 @@ function mark_inc_seen(id) {
             temp_seen_ids = JSON.parse(localStorage.getItem('seen_ids'));
             if (temp_seen_ids.includes(id)) {
                 console.log('ID=' + id + ' has already been seen, not adding it to localStorage');
-            } else {
-                temp_seen_ids.push(id);
-                localStorage.setItem('seen_ids', JSON.stringify(temp_seen_ids));
-                console.log('added ID=' + id + ' to localStorage');
+                return;
             }
         }
+        temp_seen_ids.push(id);
+        localStorage.setItem('seen_ids', JSON.stringify(temp_seen_ids));
+        console.log('added ID=' + id + ' to localStorage');
     }
 }
 
