@@ -46,7 +46,7 @@ fetch(`/incidents/init`)
         // console.log('since response text:');
         // console.log(response);
 
-        console.log('Loaded ' + response.length + ' incident records from the past ' + fetch_hours + ' hours');
+        console.log('fetched ' + response.length + ' incident records from the past ' + fetch_hours + ' hours');
 
         console.log('response stringified:' + JSON.stringify(response));
 
@@ -66,7 +66,7 @@ fetch(`/incidents/init`)
         }
     });
 
-
+// direct linking of incidents
 if (inc_str != null) {
     console.log('inc_str is not null.. looking up id=' + inc_str);
     fetch('/incidents/id/' + inc_str)
@@ -84,37 +84,68 @@ function load_incident_query(inc_str, query_response) {
     console.log('query_response=');
     console.log(query_response);
 
-    geo = query_response.geo.split(",");  // geo is in "lon,lat" format
+    let geo = query_response.geo.split(",");  // geo is in "lon,lat" format
 
-    const inc_obj = {
+    // build status object for this new incident
+    let status_array = [];
+    console.log('empty status array = ');
+    console.log(status_array);
+
+    // Status[0] is the newest status
+    // Typical order is WAITING, DISPATCHED, ENROUTE, ONSCENE
+    // incidents from dispatch rss don't always have all statuses
+
+    if (query_response.hasOwnProperty('WAITING')) {
+        console.log('found WAITING in queried data =');
+        console.log(query_response.WAITING);
+        status_array.unshift(({
+            ts: query_response.WAITING,
+            status_type: 'WAITING'
+        }));
+    }
+    if (query_response.hasOwnProperty('DISPATCHED')) {
+        console.log('found DISPATCHED in queried data =');
+        console.log(query_response.DISPATCHED);
+        status_array.unshift(({
+            ts: query_response.DISPATCHED,
+            status_type: 'DISPATCHED'
+        }));
+    }
+    if (query_response.hasOwnProperty('ENROUTE')) {
+        console.log('found ENROUTE in queried data =');
+        console.log(query_response.ENROUTE);
+        status_array.unshift(({
+            ts: query_response.ENROUTE,
+            status_type: 'ENROUTE'
+        }));
+    }
+    if (query_response.hasOwnProperty('ONSCENE')) {
+        console.log('found ONSCENE in queried data =');
+        console.log(query_response.ONSCENE);
+        status_array.unshift(({
+            ts: query_response.ONSCENE,
+            status_type: 'ONSCENE'
+        }));
+    }
+
+    console.log('status array with data = ');
+    console.log(status_array);
+
+
+    console.log('creating incident object..');
+    let new_inc_from_query = {
         addr: query_response.addr,
         agency: query_response.agency,
         id: inc_str,
         lat: geo[1],
         lon: geo[0],
-        status: [],
-        ts: query_response.ts,
-        type: query_response.type,
-        seen: false
+        inc_type: query_response.type,
+        seen: false,
+        status: status_array
     };
+    console.log(new_inc_from_query);
 
-    if ('WAITING' in query_response) {
-        inc_obj.status.unshift({ts: query_response.WAITING, type: 'WAITING'});
-    }
-    if ('DISPATCHED' in query_response) {
-        inc_obj.status.unshift({ts: query_response.DISPATCHED, type: 'DISPATCHED'});
-    }
-    if ('ENROUTE' in query_response) {
-        inc_obj.status.unshift({ts: query_response.ENROUTE, type: 'ENROUTE'});
-    }
-    if ('ONSCENE' in query_response) {
-        inc_obj.status.unshift({ts: query_response.ONSCENE, type: 'ONSCENE'});
-    }
-
-    console.log('returning incident obj:');
-    console.log(inc_obj);
-
-    add_new_incident(inc_obj);
+    add_new_incident(new_inc_from_query);
     mark_inc_seen(inc_str);
     zoom_to_inc(inc_str);
     open_inc_popup(inc_str);
@@ -144,12 +175,14 @@ function process_event_msg(json_record) {
     // Does the initial processing of an event message (both initial load and live)
     // Checks if it's in the client's event list and adds it if necessary
     // if event already exists, then the new status is added
-    console.log('got event message, updating markers');
-    const new_inc_obj = inc_obj_from_json(json_record);
+    console.log('processing event message');
+    const new_inc_obj = json_inc_fixup(json_record);
 
-    // check if id is in markers yet
-    console.log('all_incidents_map.size=' + all_incidents_map.size);
-
+    if (new_inc_obj.dup) {
+        // duplicate incident, don't add it to the map
+        console.log('ID=' + new_inc_obj.id + ' is a duplicate, not adding to client');
+        return 1;
+    }
 
     if (all_incidents_map.has(new_inc_obj.id)) {
         // incident ID already exists, add this updated status to it
@@ -159,6 +192,13 @@ function process_event_msg(json_record) {
 
     console.log('incident not found in all_incidents_map, adding now..');
 
+    // Give incident an empty status object
+    let status_obj = {
+        ts: new_inc_obj.ts,
+        status_type: new_inc_obj.status
+    };
+    new_inc_obj.status = [];
+    new_inc_obj.status.unshift(status_obj);  // add status to incident
 
     add_new_incident(new_inc_obj);  // adds incident to all_incidents_map
 }
@@ -166,14 +206,6 @@ function process_event_msg(json_record) {
 function add_new_incident(new_inc) {
     // adds new incident to global all_incidents_map, attaches map marker and places on sidebar list, then plays alert
     console.log('adding new incident to client with ID=' + new_inc.id);
-
-    // Give incident an empty status object
-    let status_obj = {
-        ts: new_inc.ts,
-        type: new_inc.status
-    };
-    new_inc.status = [];
-    new_inc.status.unshift(status_obj);  // add status to incident
 
     // check whether the client has previously seen this incident with localStorage
     if (localStorage.getItem("seen_ids") === null) {
@@ -230,7 +262,7 @@ function update_inc_status(inc_obj) {
 
     let new_status_item = {
         ts: inc_obj.ts,
-        type: inc_obj.status
+        status_type: inc_obj.status
     };
 
     // get current inc, add new status entry, re-map to updated incident
@@ -244,27 +276,20 @@ function update_inc_status(inc_obj) {
     update_marker_popup(target_id);
 }
 
-function inc_obj_from_json(json_record) {
+function json_inc_fixup(inc) {
     // do all fixups here: string, capitalize, etc
-    console.log('generating incident obj from json record');
+    console.log('putting fixes on raw json incident:');
+    console.log(inc);
 
-    console.log('json_record:');
-    console.log(json_record);
+    inc.dup = undefined;
 
-    const inc_obj = {
-        addr: json_record["addr"],
-        agency: json_record["agency"],
-        id: json_record["id"],
-        lat: json_record["lat"],
-        lon: json_record["lon"],
-        status: json_record["status"],
-        ts: json_record["ts"],
-        type: json_record["type"],
-    };
+    // convert strings to bools
+    inc.dup = (inc.dup === "1");
+    inc.new = (inc.new === "1");
 
-    console.log('returning incident obj:');
-    console.log(inc_obj);
-    return inc_obj;
+    console.log('returning fixed incident:');
+    console.log(inc);
+    return inc;
 }
 
 function pretty_str_recurse_objects(obj, stop_recurse_keys = [], tab_spacer = '') {
@@ -345,7 +370,7 @@ function generate_marker(inc_id) {
 }
 
 function get_popup_html(inc) {
-    return '<h4 style="text-align: center;"><span style="color: #000000;"><strong>' + inc.type + '</strong></span></h4>\n' +
+    return '<h4 style="text-align: center;"><span style="color: #000000;"><strong>' + inc.inc_type + '</strong></span></h4>\n' +
         '<h5 style="text-align: center;"><span style="color: #323232;">' + inc.addr + '</span></h5>\n' +
         '<h5 style="text-align: center;">ID: ' + inc.id + '</h5>\n' +
         '<h6 style="text-align: center;"><span style="color: #2f1e1e;">' + convert_ts_to_est(inc.status.at(-1).ts) + '</span></h6>\n' +
@@ -369,7 +394,7 @@ function convert_ts_to_est(ts) {
 
 }
 
-//{"ts": "2022-04-05 04:13:00", "id": "ROCE2209500025", "status": "WAITING", "type": "MVA / NO INJURIES", "addr": "W RIDGE RD/RIDGEWAY AVE ROC", "agency": "ROC", "lat": "+43.1944", "lon": "-77.6267"}
+//{"ts": "2022-04-05 04:13:00", "id": "ROCE2209500025", "status": "WAITING", "inc_type": "MVA / NO INJURIES", "addr": "W RIDGE RD/RIDGEWAY AVE ROC", "agency": "ROC", "lat": "+43.1944", "lon": "-77.6267"}
 
 const lc = L.control.locate({
     position: 'bottomright',
@@ -458,7 +483,7 @@ function get_sidebar_lg_html(id) {
     let inc = all_incidents_map.get(id);
     console.log('generating html for sidebar incident list. inc id=' + id);
 
-    let heading = inc.type + ' at ' + inc.addr;
+    let heading = inc.inc_type + ' at ' + inc.addr;
     let cent = inc.id;
     let sml = inc.lat + ', ' + inc.lon;
     let corn = convert_ts_to_est(inc.status.at(-1).ts);
@@ -564,7 +589,7 @@ function add_test_inc() {
         "addr": "TEST ADDRESS, ROC",
         "agency": "TST",
         "geo": geo,
-        "type": "TEST"
+        "inc_type": "TEST"
     };
 
     let test_id = 'TEST' + String(modulo_ms);
