@@ -139,7 +139,7 @@ function load_incident_query(inc_str, query_response) {
         id: inc_str,
         lat: geo[1],
         lon: geo[0],
-        inc_type: query_response.type,
+        type: query_response.type,
         seen: false,
         status: status_array
     };
@@ -370,7 +370,7 @@ function generate_marker(inc_id) {
 }
 
 function get_popup_html(inc) {
-    return '<h4 style="text-align: center;"><span style="color: #000000;"><strong>' + inc.inc_type + '</strong></span></h4>\n' +
+    return '<h4 style="text-align: center;"><span style="color: #000000;"><strong>' + inc.type + '</strong></span></h4>\n' +
         '<h5 style="text-align: center;"><span style="color: #323232;">' + inc.addr + '</span></h5>\n' +
         '<h5 style="text-align: center;">ID: ' + inc.id + '</h5>\n' +
         '<h6 style="text-align: center;"><span style="color: #2f1e1e;">' + convert_ts_to_est(inc.status.at(-1).ts) + '</span></h6>\n' +
@@ -394,7 +394,7 @@ function convert_ts_to_est(ts) {
 
 }
 
-//{"ts": "2022-04-05 04:13:00", "id": "ROCE2209500025", "status": "WAITING", "inc_type": "MVA / NO INJURIES", "addr": "W RIDGE RD/RIDGEWAY AVE ROC", "agency": "ROC", "lat": "+43.1944", "lon": "-77.6267"}
+//{"ts": "2022-04-05 04:13:00", "id": "ROCE2209500025", "status": "WAITING", "type": "MVA / NO INJURIES", "addr": "W RIDGE RD/RIDGEWAY AVE ROC", "agency": "ROC", "lat": "+43.1944", "lon": "-77.6267"}
 
 const lc = L.control.locate({
     position: 'bottomright',
@@ -483,7 +483,7 @@ function get_sidebar_lg_html(id) {
     let inc = all_incidents_map.get(id);
     console.log('generating html for sidebar incident list. inc id=' + id);
 
-    let heading = inc.inc_type + ' at ' + inc.addr;
+    let heading = inc.type + ' at ' + inc.addr;
     let cent = inc.id;
     let sml = inc.lat + ', ' + inc.lon;
     let corn = convert_ts_to_est(inc.status.at(-1).ts);
@@ -589,7 +589,7 @@ function add_test_inc() {
         "addr": "TEST ADDRESS, ROC",
         "agency": "TST",
         "geo": geo,
-        "inc_type": "TEST"
+        "type": "TEST"
     };
 
     let test_id = 'TEST' + String(modulo_ms);
