@@ -99,6 +99,10 @@ def rss_to_redis():
 
         rc = connect_to_redis()
 
+        # duplicate prevention
+        lats_this_scrape = []
+        lons_this_scrape = []
+
         for incident_dic in entries:
             # print('\n\n******************************************')
             print(f'    {time.strftime("%Y%m%d_%H%M%S")} - {incident_dic}')
@@ -126,8 +130,18 @@ def rss_to_redis():
             inc_status = incident_dic['summary'].split(',')[0].split()[1]
             inc_id = incident_dic['summary'].split(',')[1].split()[1]
             inc_agency = inc_id[0:3]
+
             inc_geo_lat = incident_dic['geo_lat']
             inc_geo_lon = incident_dic['geo_long']
+
+            # basic duplicate detection
+            # duplicates are multiple incidents at the same location and time with different IDs
+            if (inc_geo_lat in lats_this_scrape) and (inc_geo_lon in lons_this_scrape):
+                duplicate = 1
+            else:
+                duplicate = 0
+                lats_this_scrape.append(inc_geo_lat)
+                lons_this_scrape.append(inc_geo_lon)
 
             inc_id_status = f'{inc_id}_{inc_status}'
 
@@ -179,9 +193,11 @@ def rss_to_redis():
                     'agency': inc_agency,
                     'lat': inc_geo_lat,
                     'lon': inc_geo_lon,
-                    'new': wrote_new_incident
+                    'new': wrote_new_incident,
+                    'dup': duplicate
                 }
                 rc.xadd(name=stream_name, fields=stream_data)
+                print(f'\n{ctime_now()}: wrote stream data:{stream_data}')
 
             if wrote_new_incident:
                 print(f'\n{ctime_now()}: wrote new incident with hash={hash_name}, key={inc_status}')
