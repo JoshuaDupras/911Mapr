@@ -66,6 +66,8 @@ while True:
 
         if data['new'] == '0':
             print(f'Ignoring incident status update for ID:{data["id"]}')
+        elif data['dup'] == '1':
+            print(f'Ignoring duplicate incident with ID:{data["id"]}')
         elif tweet_enabled:
             print(f'tweeting enabled - sending tweet for ID:{data["id"]}')
             bot.update_status(tweet_text)
