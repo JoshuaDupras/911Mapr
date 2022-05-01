@@ -281,8 +281,6 @@ function json_inc_fixup(inc) {
     console.log('putting fixes on raw json incident:');
     console.log(inc);
 
-    inc.dup = undefined;
-
     // convert strings to bools
     inc.dup = (inc.dup === "1");
     inc.new = (inc.new === "1");
