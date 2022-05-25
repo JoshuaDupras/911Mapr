@@ -55,7 +55,6 @@ jobs:
           mv copilot-linux $GITHUB_WORKSPACE/bin/copilot && \
           # add to PATH
           echo "$GITHUB_WORKSPACE/bin" >> $GITHUB_PATH
-          sudo apt install -y expect
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -68,7 +67,7 @@ jobs:
         run: aws configure set region us-east-2 --profile default
 
       - name: copilot exec backup
-        run: unbuffer copilot svc exec --app incidentmapr --env prod --name redis --command "aws s3 sync /data/ s3://$BACKUP_BUCKET_PROD/hourly/"
+        run: copilot svc exec --app incidentmapr --env prod --name redis --command "aws s3 sync /data/ s3://$BACKUP_BUCKET_PROD/hourly/"
 
   discord_notification_backup_done:
     needs: backup_dev_to_prod_env
