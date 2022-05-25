@@ -79,8 +79,11 @@ jobs:
       - name: init web_app container
         run: copilot deploy --app incidentmapr --env prod --name web-app
 
+      - name: init nginx container
+        run: copilot deploy --app incidentmapr --env prod --name nginx
+
       - name: copilot show services
         run: copilot svc ls
 
-      - name: copilot show web-app service
-        run: copilot svc show --name web-app
+      - name: copilot show nginx service
+        run: copilot svc show --name nginx

@@ -55,11 +55,17 @@
         <link href="/static/css/main.css"
               rel="stylesheet">
 
+        <!-- START plausible.io analytics]-->
+        <script defer data-domain="911mapr.com" src="https://plausible.io/js/plausible.js"></script>
+        <!-- END plausible.io analytics]-->
+
     </head>
     <body>
 
         <div id="logo_container">
-            <img id="logo_image" src="/static/logo.png" alt="logo image">
+            <img id="logo_image"
+                 src="/static/logo.png"
+                 alt="logo image">
         </div>
 
         <!-- Sidebar -->
@@ -79,20 +85,20 @@
                                          title="Live Incident List"></i></a>
                     </li>
                     <li class="disabled">
-                        <a href="#"
+                        <a href="https://twitter.com/911mapr_roc" target="_blank" rel="noopener noreferrer"
                            role="tab"><i class="fa-brands fa-twitter"
-                                         title="Twitter Feed - Coming Soon!"></i></a>
+                                         title="Live Twitter Feed"></i></a>
                     </li>
-                    <li class="disabled">
-                        <a href="#"
-                           role="tab"><i class="fa-brands fa-facebook"
-                                         title="Facebook Page - Coming Soon!"></i></a>
-                    </li>
-                    <li class="disabled">
-                        <a href="#"
-                           role="tab"><i class="fa-brands fa-discord"
-                                         title="Discord Community - Coming Soon!"></i></a>
-                    </li>
+{#                    <li class="disabled">#}
+{#                        <a href="#"#}
+{#                           role="tab"><i class="fa-brands fa-facebook"#}
+{#                                         title="Facebook Page - Coming Soon!"></i></a>#}
+{#                    </li>#}
+{#                    <li class="disabled">#}
+{#                        <a href="#"#}
+{#                           role="tab"><i class="fa-brands fa-discord"#}
+{#                                         title="Discord Community - Coming Soon!"></i></a>#}
+{#                    </li>#}
                     <li class="disabled">
                         <a href="#"
                            role="tab"><i class="sidebar-icon fa-solid fa-volume-xmark"
@@ -121,29 +127,31 @@
                 <div class="sidebar-pane"
                      id="home">
                     <h1 class="sidebar-header">
-                        911 Mapr
+                        About:
                         <span class="sidebar-close"><i class="fa fa-caret-left"></i></span>
                     </h1>
 
-                    <h4 class="about_head">A Live Map of 911 Incidents Across Monroe County, NY. (Rochester)</h4>
+                    <h4 class="about_head">911Mapr is a Live Map of 911 Incidents Across Monroe County, NY.
+                                           (Rochester)</h4>
+
                     <p class="about_head"> Data Sourced from
                         <a href="https://www.monroecounty.gov/safety-incidents">Monroe County Dispatch</a>
                     </p>
 
-                    <!--                    <p class="about_body">random text </p>-->
-
                     <p class="about_link">
-                        <button class="btn btn-primary btn-large disabled">
-                            <i class="fa-brands fa-twitter about-link-icon"></i> Follow the Live Twitter Feed
-                        </button>
+                        <a href="https://twitter.com/911mapr_roc" target="_blank" rel="noopener noreferrer">
+                            <span class="btn btn-primary btn-large disabled">
+                                <i class="fa-brands fa-twitter about-link-icon"></i> Follow the Live Twitter Feed -> @911mapr_roc
+                            </span>
+                        </a>
                     </p>
 
-                    <p class="about_link">
-                        <button class="btn btn-primary btn-large disabled">
-                            <i class="fa-brands fa-discord about-link-icon"></i> Join the 911Mapr Discord Community
-                                                                                 (live notifications available)
-                        </button>
-                    </p>
+                    {#                    <p class="about_link">#}
+                    {#                        <button class="btn btn-primary btn-large disabled">#}
+                    {#                            <i class="fa-brands fa-discord about-link-icon"></i> Join the 911Mapr Discord Community#}
+                    {#                                                                                 (live notifications available)#}
+                    {#                        </button>#}
+                    {#                    </p>#}
 
                     <p class="warning">Disclaimer: Not affiliated with any government entity. Data accuracy is not
                                        guaranteed. Use at your own risk.</p>

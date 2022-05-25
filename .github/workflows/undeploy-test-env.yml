@@ -76,9 +76,11 @@ jobs:
           sed -i -r 's/count:.[0-9]/count: 0/' ./copilot/redis/manifest.yml
           sed -i -r 's/count:.[0-9]/count: 0/' ./copilot/rss-scraper/manifest.yml
           sed -i -r 's/count:.[0-9]/count: 0/' ./copilot/web-app/manifest.yml
+          sed -i -r 's/count:.[0-9]/count: 0/' ./copilot/nginx/manifest.yml
           cat ./copilot/redis/manifest.yml
           cat ./copilot/rss-scraper/manifest.yml
           cat ./copilot/web-app/manifest.yml
+          cat ./copilot/nginx/manifest.yml   
 
       - name: un-deploy redis container
         run: copilot deploy --app incidentmapr --env test --name redis
@@ -89,11 +91,14 @@ jobs:
       - name: un-deploy web_app container
         run: copilot deploy --app incidentmapr --env test --name web-app
 
+      - name: un-deploy nginx container
+        run: copilot deploy --app incidentmapr --env test --name nginx
+
       - name: copilot show services
         run: copilot svc ls
 
-      - name: copilot show web-app service
-        run: copilot svc show --name web-app
+      - name: copilot show nginx service
+        run: copilot svc show --name nginx
 
   discord_notification_undeploy_done:
     needs: undeploy_test_env

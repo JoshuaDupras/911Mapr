@@ -88,17 +88,19 @@ jobs:
       - name: copilot app init
         run: copilot app init
 
-      - name: init redis container
+      - name: deploy redis container
         run: copilot deploy --app incidentmapr --env test --name redis
 
-      - name: init twitter_bot container
-        run: copilot deploy --app incidentmapr --env test --name twitter-bot
+      # Don't deploy twitter bot container in test environment
 
-      - name: init rss_scraper container
+      - name: deploy rss_scraper container
         run: copilot deploy --app incidentmapr --env test --name rss-scraper
 
-      - name: init web_app container
+      - name: deploy web_app container
         run: copilot deploy --app incidentmapr --env test --name web-app
+
+      - name: deploy nginx container
+        run: copilot deploy --app incidentmapr --env test --name nginx
 
       - name: copilot show services
         run: copilot svc ls
