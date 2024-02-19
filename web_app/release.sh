@@ -56,7 +56,14 @@ docker tag $image_repo:$new_version $image_repo:latest
 docker push $image_repo:$new_version
 docker push $image_repo:latest
 
-echo "Docker image pushed successfully"
-
 # Write new version to file
 echo $new_version > version.txt
+
+echo "Docker image pushed successfully"
+
+# Commit version change to git
+git add version.txt
+git commit -m "Bump version to $new_version" version.txt
+
+# Push changes to Git repository
+git push origin master
