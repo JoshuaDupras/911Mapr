@@ -2,10 +2,11 @@ import json
 import logging
 import re
 import time
+import requests
 from datetime import datetime, timedelta
 from os import environ
 
-from flask import Flask, render_template, request, jsonify, Response
+from flask import Flask, render_template, request, jsonify, Response, send_file
 from redis import Redis
 
 logging.basicConfig(level=logging.INFO, format='{asctime} | {levelname:^8} | {name}.{lineno} : {message}', style='{')
@@ -16,6 +17,8 @@ app = Flask(__name__)
 
 stream_key = environ.get("STREAM", "S:ROC")
 
+CACHE = {}
+CACHE_EXPIRATION_TIME = timedelta(hours=6)  # Adjust as needed
 
 def connect_to_redis():
     return Redis(host=environ.get("REDIS_HOST", "localhost"),
@@ -223,6 +226,32 @@ def ep_stream_info():
 def get_map_token():
     app.logger.info(f'serving map token = {map_token}')
     return str(map_token)
+
+
+def _fetch_tile(z, x, y):
+    url = f'https://api.mapbox.com/styles/v1/mapbox/dark-v10/tiles/{z}/{x}/{y}?access_token={map_token}'
+    response = requests.get(url)
+    print(f'fetch new tile: {url} - {response}')
+    if response.status_code == 200:
+        return response.content
+    else:
+        return None
+
+
+@app.route('/get_tile/<int:z>/<int:x>/<int:y>')
+def get_tile(z, x, y):
+    global CACHE
+    tile_key = f"{z}-{x}-{y}"
+    if tile_key not in CACHE or (datetime.utcnow() - CACHE[tile_key]['timestamp']) > CACHE_EXPIRATION_TIME:
+        tile_content = _fetch_tile(z, x, y)
+        if tile_content is None:
+            return 'Error fetching map tile', 500
+        CACHE[tile_key] = {
+            'tile': tile_content,
+            'timestamp': datetime.utcnow()
+        }
+
+    return Response(CACHE[tile_key]['tile'], mimetype='image/png')
 
 
 @app.route('/incidents/id/<id>', methods=['GET'])

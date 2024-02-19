@@ -18,20 +18,11 @@ const map = L.map('map', {
 map.setView([43.1427, -77.6161], 10);
 map.zoomControl.setPosition('bottomright');
 
-fetch('/map_token')
-    .then(response => response.text())
-    .then((response) => {
-        console.log('map_token=');
-        console.log(response);
-
-        L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
-            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-            tileSize: 512,
-            zoomOffset: -1,
-            id: 'mapbox/dark-v10',
-            accessToken: String(response) //ENTER YOUR ACCESS TOKEN HERE
-        }).addTo(map);
-    });
+L.tileLayer('/get_tile/{z}/{x}/{y}', {
+    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    tileSize: 512,
+    zoomOffset: -1,
+}).addTo(map);
 
 window.onload = (event) => {
     console.log('page is fully loaded');
