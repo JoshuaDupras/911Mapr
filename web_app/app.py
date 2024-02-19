@@ -222,10 +222,10 @@ def ep_stream_info():
     return jsonify(stream_info)
 
 
-@app.route('/map_token', methods=['GET'])
-def get_map_token():
-    app.logger.info(f'serving map token = {map_token}')
-    return str(map_token)
+# @app.route('/map_token', methods=['GET'])
+# def get_map_token():
+#     app.logger.info(f'serving map token = {map_token}')
+#     return str(map_token)
 
 
 def _fetch_tile(z, x, y):
