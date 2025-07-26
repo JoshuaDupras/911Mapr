@@ -1,0 +1,39 @@
+{
+  "name": "911mapr-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@ansur/leaflet-pulse-icon": "^0.1.0",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^7.2.0",
+    "@mui/material": "^7.2.0",
+    "bootstrap": "^5.1.3",
+    "leaflet": "^1.9.4",
+    "leaflet-ajax": "^2.1.0",
+    "leaflet-sidebar-v2": "^3.2.0",
+    "leaflet.locatecontrol": "^0.76.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-scripts": "5.0.1"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "proxy": "http://localhost:5000",
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
