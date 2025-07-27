@@ -24,11 +24,14 @@ interface Incident {
 
 interface MapComponentProps {
   incidents: Incident[];
+  focusedIncident: Incident | null;
+  handleIncidentClick: (incident: Incident) => void;
 }
 
-export default function MapComponent({ incidents }: MapComponentProps) {
+export default function MapComponent({ incidents, focusedIncident, handleIncidentClick }: MapComponentProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const leafletMapRef = useRef<L.Map | null>(null);
+  const previousView = useRef<L.LatLngExpression | null>(null);
 
   useEffect(() => {
     if (!mapRef.current) return;
@@ -40,6 +43,17 @@ export default function MapComponent({ incidents }: MapComponentProps) {
         subdomains: 'abcd',
         maxZoom: 19,
       }).addTo(leafletMapRef.current);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (leafletMapRef.current) {
+      // Remove existing markers
+      leafletMapRef.current.eachLayer((layer) => {
+        if ((layer as any).options && (layer as any).options.pane === "markerPane") {
+          leafletMapRef.current?.removeLayer(layer);
+        }
+      });
 
       const customIcon = L.divIcon({
         className: "custom-marker",
@@ -48,24 +62,40 @@ export default function MapComponent({ incidents }: MapComponentProps) {
         iconAnchor: [8, 8],
       });
 
-      // Remove existing markers
-      leafletMapRef.current.eachLayer((layer) => {
-        if ((layer as any).options && (layer as any).options.pane === "markerPane") {
-          leafletMapRef.current?.removeLayer(layer);
-        }
+      const focusedIcon = L.divIcon({
+        className: "focused-marker",
+        html: '<div class="w-6 h-6 bg-yellow-500 rounded-full animate-pulse border-4 border-white"></div>',
+        iconSize: [24, 24],
+        iconAnchor: [12, 12],
       });
+
       // Add incident markers
       incidents.forEach((incident) => {
-        L.marker([incident.lat, incident.lon], { icon: customIcon })
+        const isFocused = focusedIncident && focusedIncident.id === incident.id;
+        L.marker([incident.lat, incident.lon], { icon: isFocused ? focusedIcon : customIcon })
           .addTo(leafletMapRef.current!)
-          .bindPopup(
-            `<strong>${incident.type}</strong><br/>${incident.addr}<br/><small>ID: ${incident.id}${incident.timestamp ? `<br/>${new Date(incident.timestamp).toLocaleString()}` : ""}</small>`
-          );
+          .on('click', () => {
+            handleIncidentClick(incident);
+          });
       });
 
       leafletMapRef.current.zoomControl.setPosition("bottomright");
     }
-  }, [incidents]);
+  }, [incidents, focusedIncident]);
+
+  useEffect(() => {
+    if (focusedIncident && leafletMapRef.current) {
+      leafletMapRef.current.setView([focusedIncident.lat, focusedIncident.lon], 14);
+    } else if (previousView.current && leafletMapRef.current) {
+      leafletMapRef.current.setView(previousView.current, 11);
+    }
+  }, [focusedIncident, previousView]);
+
+  const restorePreviousView = () => {
+    if (leafletMapRef.current) {
+      leafletMapRef.current.setView([43.161, -77.6109], 11); // Default view
+    }
+  };
 
   return (
     <div
